@@ -1,0 +1,55 @@
+x <- matrix(
+  1:20,
+  ncol = 4,
+  nrow = 5
+)
+
+updateMatricValue <- function(row, col, pValue, pList){
+  l_list <- pList
+  l_list[[1]][row, col] <- pValue[pList[[2]]]
+  l_list[[2]] <- l_list[[2]] + 1
+  l_list
+}
+
+spiralPrint <- function(x){
+  rowEnd <- nrow(x)
+  colEnd <- ncol(x)
+  rowStart <- 1
+  colStart <- 1
+  index <- 1
+  values <- 1:(nrow(x)*ncol(x))
+  y <- matrix(
+    0,
+    nrow = nrow(x),
+    ncol = ncol(x)
+  )
+  matrixList <- list(y,1)
+  
+  while (rowEnd > rowStart && colEnd > colStart) {
+    for (index in colStart:(colEnd-1)  ) {
+      message(x[rowStart, index])
+      matrixList <- updateMatricValue(rowStart, index, values, matrixList)
+    }
+    rowStart <- rowStart + 1
+    
+    for (index in (rowStart-1):(rowEnd-1)  ) {
+      message(x[index, colEnd])
+      matrixList <- updateMatricValue(index, colEnd, values, matrixList)
+    }
+    colEnd <- colEnd -1
+    
+    for (index in (colEnd + 1):(colStart + 1)  ) {
+      message(x[(rowEnd), index])
+      matrixList <- updateMatricValue(rowEnd, index, values, matrixList)
+    }
+    rowEnd <- rowEnd -1
+    
+    for (index in (rowEnd + 1):(rowStart)  ) {
+      message(x[index, colStart])
+      matrixList <- updateMatricValue(index, colStart, values, matrixList)
+    }
+    colStart <- colStart + 1
+    
+  }
+  print(matrixList[1])
+}
