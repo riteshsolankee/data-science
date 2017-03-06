@@ -1,0 +1,65 @@
+x <- matrix(
+  1:20,
+  ncol = 4,
+  nrow = 5
+)
+
+updateMatricValue <- function(row, col, pValue, pList){
+  l_list <- pList
+  l_list[[1]][row, col] <- pValue[pList[[2]]]
+  l_list[[2]] <- l_list[[2]] + 1
+  l_list
+}
+
+zigzag <- function(x, type = 1){
+  if(!is.null(nrow(x)) && !is.null(ncol(x))){
+    
+    values <- 1:(nrow(x)*ncol(x))
+    y <- matrix(
+      0,
+      nrow = nrow(x),
+      ncol = ncol(x)
+    )
+    matrixList <- list(y,1)
+    
+    if(type == 1){
+      message("Printing Zigzag row wise")
+      rowCount <- 1
+      while(rowCount <= nrow(x)){
+        for(index in 1:ncol(x)){
+          message(x[rowCount,index])
+          matrixList <- updateMatricValue(rowCount, index, values, matrixList)
+        }
+        if((rowCount +1) <=  nrow(x)){
+          for(index in ncol(x):1){
+            message(x[(rowCount+1), index])
+            matrixList <- updateMatricValue((rowCount+1), index, values, matrixList)
+          }
+        }
+        rowCount <- rowCount + 2
+      }
+      print(matrixList[1])
+    }else if(type == 2){
+      message("Printing Zigzag column wise")
+      colCount <- 1
+      while(colCount <= ncol(x)){
+        for(index in 1:nrow(x)){
+          message(x[index, colCount])
+          matrixList <- updateMatricValue(index, colCount, values, matrixList)
+        }
+        if((colCount +1) <=  ncol(x)){
+          for(index in nrow(x):1){
+            message(x[index, (colCount+1)])
+            matrixList <- updateMatricValue(index, (colCount+1), values, matrixList)
+          }
+        }
+        colCount <- colCount + 2
+      }
+      print(matrixList[1])
+    }else{
+      message("Invalid Input... pass type as 1 for row wise and 2 for columnwise")
+    }
+  }else{
+    message("Invalid Input ... First parameter should be Matrix")
+  }
+}
