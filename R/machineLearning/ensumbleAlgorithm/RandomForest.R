@@ -1,9 +1,9 @@
-setwd("/Users/ritesh/Documents/DataScience/machineLearning/regression")
+#setwd("/Users/ritesh/Documents/DataScience/machineLearning/regression")
 
 # Classification Tree with rpart
 library(randomForest)
 library(caret)
-mydata <- read.csv("binary.csv")
+mydata <- read.csv("data/binary.csv")
 ## view the first few rows of the data
 
 trainIndex <- createDataPartition(y=mydata$admit, p=.8, list=FALSE, times=1)
