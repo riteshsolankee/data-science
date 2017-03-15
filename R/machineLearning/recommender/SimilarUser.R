@@ -1,13 +1,13 @@
 # For the Recommendation System done in the class, on data train_v2.csv
 # find the top two similar users as user u1770 with Jaccard Distance.
 # The training data contains four attributes: ID, user, movie and rating
-
+getwd()
 library(recommenderlab) #Collaberative Filtering
 library(reshape2)    #Alteration of data
 library(ggplot2)     #visualization of results
 
 # Read training file along with header
-tr<-read.csv("/Users/ritesh/Documents/DataScience/machineLearning/18feb/train_v2.csv",header=TRUE)
+tr<-read.table(unz("R/machineLearning/recommender/data/train_v2.csv.zip", "train_v2.csv"), header=T, sep=",")
 # Just look at first few lines of this file
 head(tr)
 
