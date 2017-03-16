@@ -36,25 +36,35 @@ set.seed(9999)
 # In other words, NMF is a form of dimension reduction.
 # Using Lee & Seung method find target matrix
 res <- nmf(usrs, 4, "lee")
+
 usrs.hat <- fitted(res)
 print(usrs.hat)
 
 # User feature matrix
 users_feature_matrix <- basis(res)
+# Alternate way of accessing 
+users_feature_matrix_W <- res@fit@W
 # Dim: 8 x 4
 dim(users_feature_matrix)
 print(users_feature_matrix)
+dim(users_feature_matrix_W)
+print(users_feature_matrix_W)
 
 # Book feature matrix
 book_feature_matrix <- coef(res)
+# Alternate way of accessing 
+book_feature_matrix_H <- res@fit@H
 # Dim: 4 x 5
 dim(book_feature_matrix)
 print(book_feature_matrix)
 
-# recommendor system via clustering based on vectors in book_feature_matrix
+# recommender system via clustering based on vectors in book_feature_matrix
 books <- data.frame(t(book_feature_matrix))
 
 features <- cbind(books$X1, books$X2)
+### Another way of accessing factors
+### The factors are then in res@fit@W and res@fit@H
 
+### 
 plot(features)
 title("Books Feature Plot")

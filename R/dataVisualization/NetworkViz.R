@@ -1,11 +1,15 @@
 ## PROBLEM SOURCE: https://rpubs.com/kateto/netviz
 
 
-nodes <- read.csv("Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
-links <- read.csv("Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
+nodes <- read.csv("R/dataVisualization/data/Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
+links <- read.csv("R/dataVisualization/data/Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
 
+
+View(nodes)
+View(links)
 ## Find number of Nodes
 nrow(nodes); length(unique(nodes$id))
+nrow(links); nrow(unique(links[,c("from","to")]))
 
 links <- aggregate(links[,3], links[,-3], sum)
 links <- links[order(links$from, links$to),]
@@ -13,8 +17,8 @@ colnames(links)[4] <- "weight"
 rownames(links) <- NULL
 
 ## Dataset 2 - Matrix
-nodes2 <- read.csv("Dataset2-Media-User-Example-NODES.csv", header=T, as.is=T)
-links2 <- read.csv("Dataset2-Media-User-Example-EDGES.csv", header=T, row.names=1)
+nodes2 <- read.csv("R/dataVisualization/data/Dataset2-Media-User-Example-NODES.csv", header=T, as.is=T)
+links2 <- read.csv("R/dataVisualization/data/Dataset2-Media-User-Example-EDGES.csv", header=T, row.names=1)
 
 head(nodes2)
 head(links2)

@@ -41,8 +41,10 @@ as(user.simil, "list")[[1770]]
 user.simil.df <- data.frame(Reduce(rbind, user.simil.list))
 user.simil.df$userId  <- 1:nrow(user.simil.df)
 colnames(user.simil.df) <- c("similarity", "UsrId")
+
 user.simil.df <- user.simil.df[ order(-user.simil.df[,1]), ]
 ## Print the top three similar records
+rownames(user.simil.df) <- NULL
 head(user.simil.df, 3)
 ## Hence, the two most similar users are 861 and 4175
 
