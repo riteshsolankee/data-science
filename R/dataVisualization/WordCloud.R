@@ -3,7 +3,7 @@ library(tm)
 library(SnowballC)
 library(wordcloud)
 
-questions = read.csv("R/dataVisualization/data/JEOPARDY_10.csv")
+questions = read.csv("R/dataVisualization/data/JEOPARDY_10.csv", stringsAsFactors = FALSE)
 
 ## First we need to create a Corpus 
 question_corpus = Corpus(VectorSource(questions$Question))
@@ -17,11 +17,13 @@ question_corpus = tm_map(question_corpus, removePunctuation)
 ## Convert to Plain Text Format
 question_corpus = tm_map(question_corpus, PlainTextDocument)
 
+## To resolve the error 'simple_triplet_matrix 'i, j, v' different lengths'
+question_corpus <- Corpus(VectorSource(question_corpus))
+
 ## Remove Stopwords
 question_corpus = tm_map(question_corpus, removeWords, stopwords('english'))
 
-## To resolve the error 'simple_triplet_matrix 'i, j, v' different lengths'
-question_corpus <- Corpus(VectorSource(question_corpus))
+
 ## Create Word Cloud
 wordcloud(question_corpus, max.words = 100, random.order = F)
 
@@ -38,10 +40,11 @@ category_corpus = tm_map(category_corpus, removePunctuation)
 ## Convert to Plain Text Format
 category_corpus = tm_map(category_corpus, PlainTextDocument)
 
+## To resolve the error 'simple_triplet_matrix 'i, j, v' different lengths'
+category_corpus <- Corpus(VectorSource(category_corpus))
+
 ## Remove Stopwords
 category_corpus = tm_map(category_corpus, removeWords, stopwords('english'))
 
-## To resolve the error 'simple_triplet_matrix 'i, j, v' different lengths'
-category_corpus <- Corpus(VectorSource(category_corpus))
 ## Create Word Cloud
 wordcloud(category_corpus, max.words = 400, random.order = F)
