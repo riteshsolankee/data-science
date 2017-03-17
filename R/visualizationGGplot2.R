@@ -84,13 +84,33 @@ ggplot(midwest, aes(x=area, y=poptotal)) +
     subtitle="From midwest dataset", 
     y="Population", x="Area", caption="Midwest Demographics")
 
-##  we want the color to change based on another column in the source dataset (midwest), 
-## it must be specified inside the aes() function
-ggplot(midwest, aes(x=area, y=poptotal)) + 
-  geom_point(aes(col=state), size=1) +  # Set color to vary based on state categories.
+##  If we want the color to change based on another column in the source 
+## dataset (midwest), it must be specified inside the aes() function
+## Each point is colored based on the state it belongs because of aes(col=state)
+gg <- ggplot(midwest, aes(x=area, y=poptotal)) + 
+  geom_point(aes(col=state), size=3) +  # Set color to vary based on state categories.
   geom_smooth(method="lm", col="firebrick", size=2) + 
   coord_cartesian(xlim=c(0, 0.1), ylim=c(0, 1000000)) + 
   labs(
     title="Area Vs Population", 
     subtitle="From midwest dataset", 
     y="Population", x="Area", caption="Midwest Demographics")
+plot(gg)
+gg + theme(legend.position="None")  # remove legend
+gg + scale_colour_brewer(palette = "Set1") # change color palette
+
+############# - How to Change the X Axis Texts and Ticks Location - ###########
+###############################################################################
+## The breaks should be of the same scale as the X axis variable
+## 'scale_x_continuous' or 'scale_y_continuous' for continuous variable
+## 'scale_x_date' or 'scale_y_date' for date variable 
+ggplot(midwest, aes(x=area, y=poptotal)) + 
+  geom_point(aes(col=state), size=3) +  # Set color to vary based on state categories.
+  geom_smooth(method="lm", col="firebrick", size=2) + 
+  coord_cartesian(xlim=c(0, 0.1), ylim=c(0, 1000000)) + 
+  labs(
+    title="Area Vs Population", 
+    subtitle="From midwest dataset", 
+    y="Population", x="Area", caption="Midwest Demographics") +
+  scale_x_continuous(breaks=seq(0, 0.1, 0.01)) + 
+  scale_y_continuous(breaks=seq(0, 1000000, 100000))
