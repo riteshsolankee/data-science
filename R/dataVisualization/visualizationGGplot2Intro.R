@@ -73,4 +73,10 @@ print(gg1)
 
 ############### - The Facet - ################
 ##############################################
+## 1. facet_wrap(formula) takes in a formula as the argument. The item on the RHS corresponds to the column. 
+##    The item on the LHS defines the rows.
 gg1 + facet_wrap( ~ cut, ncol=3)
+gg1 + facet_wrap(color ~ cut, scales="free")  # row: color, column: 
+
+## 2. For comparison purposes, you can put all the plots in a grid as well using facet_grid(formula)
+gg1 + facet_grid(color ~ cut)
