@@ -76,7 +76,7 @@ question_corpus <- tm_map(question_corpus, removeWords, c('the', 'this', stopwor
 
 
 ## Create Word Cloud
-wordcloud(question_corpus, max.words = 100, random.order = F, colors="red")
+wordcloud(question_corpus, max.words = 100, random.order = F, colors=palette(rainbow(6)))
 
 ## First we need to create a Corpus 
 category_corpus = Corpus(VectorSource(questions$Category))
