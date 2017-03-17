@@ -14,11 +14,15 @@ View(midwest)
 ## or lines in it. This is because, ggplot doesn’t assume that you meant a scatterplot 
 ## or a line chart to be drawn.
 
+## The aes argument stands for aesthetics.
 ## aes() function is used to specify the X and Y axes. That’s because, any information 
 ## that is part of the source dataframe has to be specified inside the aes() function
 # Init Ggplot
 ggplot(midwest, aes(x=area, y=poptotal))  # area and poptotal are columns in 'midwest'
-## make a scatterplot on top of the blank ggplot by adding points using a geom layer 
+
+## The layers in ggplot2 are also called ‘geoms’. Once the base setup is done, 
+## you can append the geoms one on top of the other.
+## Make a scatterplot on top of the blank ggplot by adding points using a geom layer 
 ## called geom_point
 ggplot(midwest, aes(x=area, y=poptotal)) + geom_point()
 
