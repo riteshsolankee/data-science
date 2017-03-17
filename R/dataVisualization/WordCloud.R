@@ -7,7 +7,7 @@ library(tm) ## Text Mining Packages
 ## collapsing words to a common root to aid comparison of vocabulary. Currently supported languages 
 ## are Danish, Dutch, English, Finnish, French, German, Hungarian, Italian,
 ## Norwegian, Portuguese, Romanian, Russian, Spanish, Swedish and Turkish
-library(SnowballC) ## Snowball stemmers based on the C libstemmer UTF-8 library
+library(SnowballC) ## Snowball stemmers based on the C libstemmer UTF-8 library 
 library(wordcloud)
 
 questions = read.csv("R/dataVisualization/data/JEOPARDY_10.csv", stringsAsFactors = FALSE)
