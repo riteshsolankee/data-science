@@ -12,6 +12,13 @@ library(wordcloud)
 
 questions = read.csv("R/dataVisualization/data/JEOPARDY_10.csv", stringsAsFactors = FALSE)
 
+library(dplyr)
+questions %>%
+  group_by(Category) %>%
+  tally() %>% 
+  arrange(desc(n))
+
+
 View(questions)
 ## The main structure for managing documents in tm is a so-called Corpus, representing a collection of text
 ## documents. A corpus is an abstract concept, and there can exist several implementations in parallel. The
