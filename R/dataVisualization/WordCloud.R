@@ -71,9 +71,10 @@ question_corpus <- tm_map(question_corpus, removeWords, c('the', 'this', stopwor
 
 ## scale: This is used to indicate the range of sizes of the words.
 ## max.words and min.freq:  These parameters are used to limit the number of words plotted. 
-##                          max.words will plot the specified number of words and discard 
-##                          least frequent terms, whereas, min.freq will discard all terms 
-##                          whose frequency is below the specified value.
+##                          - max.words will plot the specified number of words and discard 
+##                            least frequent terms, whereas, 
+##                          - min.freq will discard all terms 
+##                            whose frequency is below the specified value.
 ## random.order:  By setting this to FALSE, we make it so that the words with the highest 
 ##                frequency are plotted first. If we don’t set this, it will plot the words 
 ##                in a random order, and the highest frequency words may not necessarily appear in the center.
