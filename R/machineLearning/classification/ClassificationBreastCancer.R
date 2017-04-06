@@ -1,8 +1,9 @@
 # Classification Tree with rpart
 library(rpart)
 library(caret)
-setwd("/Users/ritesh/Documents/DataScience/machineLearning/regression")
-bcTree <- read.csv("breast-cancer-wisconsin.csv")
+
+setwd("/Users/ritesh/pad-datascience/R/")
+bcTree <- read.csv("machineLearning/data/breast-cancer-wisconsin.csv")
 breast_cancer_wisconsin_col_names <-
   c(
     "Sample_code_number",
@@ -54,9 +55,9 @@ sapply(myDataTrain, sd)
 ## we want to make sure there are not 0 cells
 xtabs( ~ Class + Clump_Thickness, data = myDataTrain)
 
-#Logistic regression needs a categorical output variable
-
-myDataTrain$rank <- factor(myDataTrain$Class)
+#Convert the 'Class' field to categorical output variable
+myDataTrain$Class <- factor(myDataTrain$Class)
+## Build a decision tree model
 fit <-
   rpart(
     Class ~ Clump_Thickness +
@@ -71,12 +72,20 @@ fit <-
     method = "class",
     data = myDataTrain
   )
-# grow tree
-#fit <- rpart(Kyphosis ~ Age + Number + Start,
-#            method="class", data=kyphosis)
 
-View(myDataTrain)
+## Prediction
+levels(myDataTrain$Class) <- levels(myDataTest$Class)
 
+myDataTest$Class <- factor(myDataTest$Class)
+
+myDataTest$myDataOutput.bc <- predict(fit, myDataTest, type="class")
+#Confusion Matrix
+predict.output.tree.bc <-(myDataTest$myDataOutput.bc)
+actual.input.tree.bc <- myDataTest$Class
+conf.tablr <- table(predict.output.tree.bc, actual.input.tree.bc)
+confusionMatrix(conf.tablr)
+
+## Plot
 printcp(fit) # display the results
 plotcp(fit) # visualize cross-validation results
 summary(fit) # detailed summary of splits
@@ -89,6 +98,3 @@ text(fit,
      all = TRUE,
      cex = .8)
 
-# create attractive postscript plot of tree
-post(fit, file = "c:/tree.ps",
-     title = "Classification Tree for marks")

@@ -1,9 +1,13 @@
 library(caret)
 
-setwd("/Users/ritesh/Documents/DataScience/machineLearning/regression")
-mydata <- read.csv("binary.csv")
-## view the first few rows of the data
+setwd("/Users/ritesh/pad-datascience/R/")
+mydata <- read.csv("machineLearning/data/binary.csv")
 
+## view the first few rows of the data
+head(mydata)
+nrow(mydata)
+
+## Splitting data into test and train samples by creating random index on admit column
 trainIndex <- createDataPartition(y=mydata$admit, p=.8, list=FALSE, times=1)
 
 head(trainIndex)
@@ -24,7 +28,6 @@ attach(myDataTrain)
 xtabs(~ admit + rank, data = myDataTrain)
 
 #Logistic regression needs a categorical output variable
-
 myDataTrain$rank <- factor(myDataTrain$rank)
 
 mylogit <- glm(admit ~ gre + gpa + rank, data = myDataTrain, family = "binomial")
@@ -39,5 +42,7 @@ myDataTest$rank <- factor(myDataTest$rank)
 myDataTest$myDataOutput <- predict(mylogit, myDataTest, type="response")
 
 #Confusion Matrix
-table(round(myDataTest$myDataOutput), myDataTest$admit)
-
+prediction.output <-round(myDataTest$myDataOutput)
+actual.input <- myDataTest$admit
+conf.tablr <- table(prediction.output, actual.input)
+confusionMatrix(conf.tablr)

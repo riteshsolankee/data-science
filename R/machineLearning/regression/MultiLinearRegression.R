@@ -1,4 +1,4 @@
-setwd("/Users/ritesh/Documents/DataScience/machineLearning/regression")
+setwd("R/machineLearning/data/")
 x <- read.csv("datafile.csv", header = TRUE, sep = ",")
 head(x)
 #attach(x)
