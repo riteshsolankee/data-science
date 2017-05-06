@@ -3,7 +3,8 @@ library(reshape2)    #Alteration of data
 library(ggplot2)     #visualization of results
 #library(SNFtool)
 # Read training file along with header
-tr<-read.csv("/Users/ritesh/Documents/DataScience/machineLearning/18feb/train_v2.csv",header=TRUE)
+setwd("/Users/ritesh/pad-datascience/R/")
+tr<-read.table(unz("machineLearning/recommender/data/train_v2.csv.zip", "train_v2.csv"), header=T, sep=",")
 # Just look at first few lines of this file
 head(tr)
 #contains  ID, user, movie, rating as attributes
@@ -14,6 +15,7 @@ tr[tr$user==1,]
 
 
 g<-acast(tr, user ~ movie)
+
 # Check the class of g
 class(g)
 # Convert it as a matrix
@@ -30,7 +32,6 @@ head(as(r, "data.frame"))
 # normalize the rating matrix
 r_m <- normalize(r)
 as(r_m, "list")
-
 
 # An image plot of raw-ratings & normalized ratings#  A column represents one specific movie and 
 #ratings by users are shaded. 
@@ -74,18 +75,19 @@ as(recommended.items.u1022.top3, "list")
 recom <- predict(rec2, r["1022",], type="ratings")
 # Convert all your recommendations to list structure
 rec_list<-as(recom,"list")
-head(summary(rec_list))
+as(recom, "matrix")[,1:10]
 # Access this list. User 1, item at index 2
 rec_list[[1]][2]
 # Convert to data frame all recommendations for user 1
 u1<-as.data.frame(rec_list[[1]])
 attributes(u1)
 class(u1)
+head(u1)
 # Create a column by name of id in data frame u1 and populate it with row names
 u1$id<-row.names(u1)
 # Now access movie ratings in column 2 for u1
 u1[u1$id==3952,1]
-
+u1[u1$id==3952,]
 ###############Validation#######################################
 # create evaluation scheme splitting taking 90% of the data for training and leaving 10% for validation or test
 e <- evaluationScheme(r[1:100], method="split", train=0.7, given=15)

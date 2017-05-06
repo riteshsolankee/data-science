@@ -9,8 +9,8 @@ library(tm) ## Text Mining Packages
 ## Norwegian, Portuguese, Romanian, Russian, Spanish, Swedish and Turkish
 library(SnowballC) ## Snowball stemmers based on the C libstemmer UTF-8 library 
 library(wordcloud)
-
-questions = read.csv("R/dataVisualization/data/JEOPARDY_10.csv", stringsAsFactors = FALSE)
+setwd("/Users/ritesh/pad-datascience/R/")
+questions = read.csv("dataVisualization/data/JEOPARDY_10.csv", stringsAsFactors = FALSE)
 
 library(dplyr)
 questions %>%

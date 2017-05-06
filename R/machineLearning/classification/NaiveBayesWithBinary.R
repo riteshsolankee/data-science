@@ -1,11 +1,11 @@
-setwd("/Users/ritesh/Documents/DataScience/machineLearning/4feb")
+setwd("/Users/ritesh/pad-datascience/R/")
 
 library(e1071)
 library(caret)
 
 #mydata <- read.csv("binary.csv")
-mydata<-read.csv("Indian-liver-patients.csv", header = TRUE, sep = ",")
-View(mydata)
+mydata<-read.csv("machineLearning/data/Indian-liver-patients.csv", header = TRUE, sep = ",")
+head(mydata)
 
 trainIndex <- createDataPartition(y=mydata$Liver.patient.or.not, p=.8, list=FALSE, times=1)
 

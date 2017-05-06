@@ -31,7 +31,7 @@ set.seed(9999)
 # Given a u x v matrix A with nonnegative elements, we wish to find nonnegative, 
 # rank-k matrices W (u x k) and H (k x v) such that
 # 
-# A ??? WH
+# A = WH
 # 
 # In other words, NMF is a form of dimension reduction.
 # Using Lee & Seung method find target matrix
@@ -62,8 +62,6 @@ print(book_feature_matrix)
 books <- data.frame(t(book_feature_matrix))
 
 features <- cbind(books$X1, books$X2)
-### Another way of accessing factors
-### The factors are then in res@fit@W and res@fit@H
 
 ### 
 plot(features)

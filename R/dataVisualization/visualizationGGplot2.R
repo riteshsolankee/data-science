@@ -10,7 +10,7 @@ library(ggplot2)
 data("midwest", package = "ggplot2")  # load the data
 View(midwest)
 
-## A blank ggplot is drawn. Even though the x and y are specified, there are no points 
+## A blank ggplot is drawn. Even though the x and y are  specified, there are no points 
 ## or lines in it. This is because, ggplot doesn’t assume that you meant a scatterplot 
 ## or a line chart to be drawn.
 

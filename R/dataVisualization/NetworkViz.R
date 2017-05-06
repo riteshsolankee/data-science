@@ -1,12 +1,12 @@
 ## PROBLEM SOURCE: https://rpubs.com/kateto/netviz
 
+setwd("/Users/ritesh/pad-datascience/R/")
+nodes <- read.csv("dataVisualization/data/Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
+links <- read.csv("dataVisualization/data/Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
 
-nodes <- read.csv("R/dataVisualization/data/Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
-links <- read.csv("R/dataVisualization/data/Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
 
-
-View(nodes)
-View(links)
+#View(nodes)
+#View(links)
 head(nodes)
 head(links)
 ## Find number of Nodes

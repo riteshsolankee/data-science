@@ -1,9 +1,8 @@
-#setwd("/Users/ritesh/Documents/DataScience/machineLearning/regression")
-
+setwd("/Users/ritesh/pad-datascience/R/")
 # Classification Tree with rpart
 library(randomForest)
 library(caret)
-mydata <- read.csv("data/binary.csv")
+mydata <- read.csv("machineLearning/data/binary.csv")
 ## view the first few rows of the data
 
 trainIndex <- createDataPartition(y=mydata$admit, p=.8, list=FALSE, times=1)
@@ -19,7 +18,7 @@ summary(myDataTrain)
 #to get the standard deviations of data
 sapply(myDataTrain, sd)
 
-attach(myDataTrain)
+#attach(myDataTrain)
 
 ## two-way contingency table of categorical outcome and predictors
 ## we want to make sure there are not 0 cells
@@ -32,7 +31,7 @@ levels(myDataTest) <- levels(myDataTrain)
 
 myDataTest$rank <- factor(myDataTest$rank)
 
-fitRandomForest <- randomForest(admit ~ gre + gpa + rank,  data=myDataTrain, ntree=400)
+fitRandomForest <- randomForest(admit ~ gre + gpa + rank,  data=myDataTrain, ntree=200)
 
 
 

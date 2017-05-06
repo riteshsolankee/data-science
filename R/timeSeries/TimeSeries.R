@@ -7,7 +7,8 @@ install.packages("rdatamarket")
 library(rdatamarket)
 
 # View the Data
-data <- dmlist("http://data.is/1RvZGQL")
+data <- dmlist("http://data.is/1RvZGQL") 
+
 
 # Is this data a time series Object ?
 

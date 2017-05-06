@@ -1,6 +1,7 @@
 ## Load Test data ## 
 library(ggplot2)
-housing <- read.csv("R/dataVisualization/data/landdata-states.csv")
+setwd("/Users/ritesh/pad-datascience/R/")
+housing <- read.csv("dataVisualization/data/landdata-states.csv")
 head(housing[1:5])
 ### 
 
@@ -69,6 +70,7 @@ p4 + scale_x_discrete(name="State Abbreviation") +
 p5 <- ggplot(housing, aes(x = Date, y = Home.Value))
 p5 + geom_line(aes(color = State))
 (p5 <- p5 + geom_line(aes(color = State)) + facet_wrap(~State, ncol = 10))
+(p5 <- p5 + geom_line(aes(color = State)) + facet_grid(.~State))
 
 ## Themes ##
 # The ggplot2 theme system handles non-data plot elements such as
