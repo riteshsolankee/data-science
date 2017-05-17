@@ -38,7 +38,8 @@ plot(EuStockMarkets[,"FTSE"])
 ############ Conclusion from step - 1 #############
 ## 1 - Data is multivariate time series
 ## 2 - There are four time series data 
-## 3 - Each time series has trend but no sesonality
+## 3 - Each time series have trend but no sesonality
+## 4 - The frequence is 260
 
 ############ Step - 2: Stabilize variance #############
 ## Using 'log function' to stablize variwnce
@@ -99,4 +100,4 @@ auto.arima(data_log_DAX)
 ar_with_drift <- Arima(data_log_DAX,order=c(0,1,0), include.drift = T)
 ar_with_drift # autoregression term not significant
 data_log_DAX_forcast <- forecast(ar_with_drift, h= 5*260)
-plot(data_log_DAX_forcast, main = "ARIMA forecasts for CAC", col = "Red")
+plot(data_log_DAX_forcast, main = "ARIMA forecasts for DAX", col = "Red")
