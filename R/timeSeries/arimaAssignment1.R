@@ -76,7 +76,7 @@ pacf(data_log_diff_1, lag.max = 600)
 ar_0 <- arima(data_log_DAX,order=c(0,1,0))
 ar_0 # autoregression term not significant
 BIC(ar_0)
-pred <- predict(ar, n.ahead=2*260)
+pred <- predict(ar_0, n.ahead=2*260)
 ts.plot(data_DAX, 2.718^pred$pred,  log="y",lty=c(1,3))
 
 ## Trying to higher value of p and q  to see if AIC improves
