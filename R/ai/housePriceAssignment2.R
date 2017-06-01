@@ -57,7 +57,7 @@ Mode <- function(x) {
 }
 
 ## fix charater missing values
-imputeMissingAttributes <- function(df){
+imputeMissingAttributes <- function(df, DATA_ATTR_TYPES){
   # for character  attributes set missing value
   char_attr <- intersect(names(df),DATA_ATTR_TYPES$character)
   for (x in char_attr){
@@ -123,70 +123,70 @@ imputeMissingAttributes <- function(df){
   df
 }
 
-train.df <- imputeMissingAttributes(train)
+train_df <- imputeMissingAttributes(train, DATA_ATTR_TYPES)
 
-Num_NA <- sapply(train.df,function(y)length(which(is.na(y)==T)))
-NA_Count <- data.frame(Item=colnames(train),Count=Num_NA)
+Num_NA <- sapply(train_df,function(y)length(which(is.na(y)==T)))
+NA_Count <- data.frame(Item=colnames(train_df),Count=Num_NA)
 NA_Count
 #############################################################################################
 ########## Features selection (using Boruta) #############
 #############################################################################################
-# Clear variables
-#rm(list=ls())
 
-# Load data afresh 
-# retrive data for analysis
-#sample.df <- read.csv("ai/data/train.csv", stringsAsFactors = F)
-#train.raw <- read.csv("ai/data/train.csv", stringsAsFactors = F)
-#test.raw <- read.csv("ai/data/test.csv", stringsAsFactors = F)
-
-# extract only candidate feature names i.e exclude 'ID' and lable column
-candidate.features <- setdiff(names(train.df),c("Id","SalePrice"))
-data.type <- sapply(candidate.features,function(x){class(train.df[[x]])})
-table(data.type)
-
-# Determine data types
-explanatory.attributes <- setdiff(names(train.df),c("Id","SalePrice"))
-data.classes <- sapply(explanatory.attributes,function(x){class(train.df[[x]])})
-
-# categorize data types in the data set?
-unique.classes <- unique(data.classes)
-
-attr.data.types <- lapply(unique.classes,function(x){names(data.classes[data.classes==x])})
-names(attr.data.types) <- unique.classes
-
-# Prepare data set for Boruta analysis. As Boruta uses Random forest, missng data needs to be fixed
-# pull out the response variable
-response <- train.df$SalePrice
-
-# remove identifier and response variables
-train.df <- train.df[candidate.features]
-
-# for numeric set missing values to -1 for purposes of the random forest run
-for (x in attr.data.types$integer){
-  train.df[[x]][is.na(sample.df[[x]])] <- -1
+extractFeatures <- function(train.df){
+  # extract only candidate feature names i.e exclude 'ID' and lable column
+  candidate.features <- setdiff(names(train.df),c("Id","SalePrice"))
+  data.type <- sapply(candidate.features,function(x){class(train.df[[x]])})
+  table(data.type)
+  # Determine data types
+  explanatory.attributes <- setdiff(names(train.df),c("Id","SalePrice"))
+  data.classes <- sapply(explanatory.attributes,function(x){class(train.df[[x]])})
+  
+  # categorize data types in the data set?
+  unique.classes <- unique(data.classes)
+  
+  attr.data.types <- lapply(unique.classes,function(x){names(data.classes[data.classes==x])})
+  names(attr.data.types) <- unique.classes
+  
+  # Prepare data set for Boruta analysis. As Boruta uses Random forest, missng data needs to be fixed
+  # pull out the response variable
+  response <- train.df$SalePrice
+  
+  # remove identifier and response variables
+  train.df <- train.df[candidate.features]
+  
+  # for numeric set missing values to -1 for purposes of the random forest run
+  for (x in attr.data.types$integer){
+    train.df[[x]][is.na(sample.df[[x]])] <- -1
+  }
+  # for charater set missing values to *MISSING* for purposes of the random forest run
+  for (x in attr.data.types$character){
+    train.df[[x]][is.na(train.df[[x]])] <- "*MISSING*"
+  }
+  
+  ### Run Boruta Analysis ###
+  set.seed(13)
+  bor.results <- Boruta(train.df,response,
+                        maxRuns=101,
+                        doTrace=0)
+  
+  # Print Boruta result
+  print(bor.results)
+  ## Bucketing attributes as 'Confirmed', 'Tentative' and 'Rejected' :
+  CONFIRMED_ATTR <- getSelectedAttributes(bor.results, withTentative = F)
+  CONFIRMED_ATTR_WITH_TENTATIVE <- getSelectedAttributes(bor.results, withTentative = T)
+  TENTATIVE_ATTR <- CONFIRMED_ATTR_WITH_TENTATIVE[which(!CONFIRMED_ATTR_WITH_TENTATIVE %in% CONFIRMED_ATTR)]
+  REJECTED_ATTR <- names(train.df)[!(names(train.df) %in% CONFIRMED_ATTR_WITH_TENTATIVE)]
+  PREDICTOR_ATTR <- c(CONFIRMED_ATTR,TENTATIVE_ATTR,REJECTED_ATTR)
+  
+  return(list(
+    CONFIRMED_ATTR = CONFIRMED_ATTR,
+    TENTATIVE_ATTR = TENTATIVE_ATTR,
+    REJECTED_ATTR = REJECTED_ATTR, 
+    PREDICTOR_ATTR = PREDICTOR_ATTR,
+    BOR_RESULT = bor.results))
 }
-# for charater set missing values to *MISSING* for purposes of the random forest run
-for (x in attr.data.types$character){
-  train.df[[x]][is.na(train.df[[x]])] <- "*MISSING*"
-}
 
-### Run Boruta Analysis ###
-set.seed(13)
-bor.results <- Boruta(train.df,response,
-                      maxRuns=101,
-                      doTrace=0)
-
-# Print Boruta result
-bor.results
-
-## Bucketing attributes as 'Confirmed', 'Tentative' and 'Rejected' :
-CONFIRMED_ATTR <- getSelectedAttributes(bor.results, withTentative = F)
-CONFIRMED_ATTR_WITH_TENTATIVE <- getSelectedAttributes(bor.results, withTentative = T)
-TENTATIVE_ATTR <- CONFIRMED_ATTR_WITH_TENTATIVE[52:length(CONFIRMED_ATTR_WITH_TENTATIVE)]
-REJECTED_ATTR <- names(train.df)[!(names(train.df) %in% CONFIRMED_ATTR_WITH_TENTATIVE)]
-PREDICTOR_ATTR <- c(CONFIRMED_ATTR,TENTATIVE_ATTR,REJECTED_ATTR)
-
+attr_list <- extractFeatures(train_df)
 # create folds for training
 set.seed(13)
 data_folds <- createFolds(train$SalePrice, k=5)
