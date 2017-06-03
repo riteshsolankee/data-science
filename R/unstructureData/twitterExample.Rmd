@@ -1,0 +1,136 @@
+---
+title: "twitterExample"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+### Read Data and Load Packages 
+```{r,message=FALSE, warning=FALSE}
+# Load Packages
+library(MASS) 
+library(Metrics)
+library(corrplot)
+library(randomForest)
+library(lars)
+library(ggplot2)
+library(xgboost)
+library(Matrix)
+library(methods)
+library(caret)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+```{r}
+
+filename <- "/Users/ritesh/pad-datascience/R/unstructureData/data/tweets.csv"
+tweets = read.csv(filename, file.info(filename)$size)
+dim(tweets)
+## Extract year, month, date
+tweets$timestamp = as.Date(tweets$timestamp)
+head(tweets$timestamp)
+
+tweets$year = format(tweets$timestamp, '%Y')
+tweets$month = format(tweets$timestamp, '%B')
+tweets$day = format(tweets$timestamp, '%d')
+cat("Year, Month and Date : " ,tweets$year,  tweets$month, tweets$day)
+
+```
+```{r}
+## tweets across years
+tweets_years = tweets %>% group_by(year) %>% summarise(count=n())
+tweets_years
+```
+```{r tweets_years }
+## ploting the dataframe using ggplot and plotly
+bar_chart <- ggplot(head(tweets_years, 25), aes(x = reorder(year,-count), y = count)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light()
+ggplotly(bar_chart)
+```
+```{r}
+### Twitter API code ###
+# API Key : 	KTJhKKqkHpUBG7g1sijFROgWM
+# Consumer Secret (API Secret): 	iZNtlyLfhtlTOUmUeI8VAMI5HYPtZBIvQPwxFMOgjsvJ34mYQ5
+# Access Token:	147624175-9dzxj6TpkX2QFdAi2Ng6AnNo9cU7jPIEsVZRGUCc
+# Access Token Secret:	wBF0JVMVufiLwajwHFdUbsjU9vLGxtLPye0a7FbIdpHqp
+api_key <- "KTJhKKqkHpUBG7g1sijFROgWM"
+api_secret <- "iZNtlyLfhtlTOUmUeI8VAMI5HYPtZBIvQPwxFMOgjsvJ34mYQ5"
+token <- "147624175-9dzxj6TpkX2QFdAi2Ng6AnNo9cU7jPIEsVZRGUCc"
+token_secret <- "wBF0JVMVufiLwajwHFdUbsjU9vLGxtLPye0a7FbIdpHqp"
+
+setup_twitter_oauth(api_key, api_secret, token, token_secret)
+
+
+```
+```{r modi's tweet}
+#modi <- userTimeline('narendramodi', 200)
+modi
+df.modi = twListToDF(modi)
+dim(df.modi)
+df.modi
+```
+## Extract year, month, date
+```{r, message=FALSE, warning=FALSE}
+
+
+```
+## Bag of words analysis if modi's twitter
+```{r, message=FALSE, warning=FALSE}
+words_list <- str_split(df.modi$text, ' ')
+words_list[1]
+words <- unlist(words_list)
+freq_words <- data.frame(table(words))
+freq_words <- freq_words %>% arrange(-Freq)
+freq_words
+all_stop_words <- c(stopwords(), c('&amp;'))
+all_stop_words
+freq_words <- freq_words[! freq_words$words %in% all_stop_words,]
+freq_words
+```
+
+```{r}
+## ploting the dataframe using ggplot and plotly
+bar_chart <- 
+  ggplot(head(freq_words, 10), aes(x = reorder(words,-Freq), y = Freq)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light()
+ggplotly(bar_chart)
+```
+## WordCloud 
+```{r}
+## Basic word cloud
+wordcloud(freq_words$words, freq_words$Freq, max.words = 100, random.order = T, random.color = T)
+
+word_corpus <- Corpus(VectorSource(df.modi$text))
+word_corpus
+## details are displayed with inspect()
+inspect(word_corpus[[100]])
+meta(word_corpus[[100]])
+lapply(word_corpus[1:2], as.character)
+```
+
+
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+

@@ -1,0 +1,107 @@
+---
+title: "TextMiningExample"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Load library and Read Data
+```{r load, message=TRUE, warning=TRUE}
+library(tm)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(wordcloud)
+```
+
+```{r modiTweets}
+rm(list=ls())
+tweets <- read.csv("/Users/ritesh/pad-datascience/R/unstructureData/data/narendramodi_tweets.csv")
+
+```
+## Creating 'corpus' from the tweets text column
+```{r }
+tweets$text <- as.character(tweets$text)
+tweets$text_transformed <- gsub("[^A-Za-z///' ]", " ", tweets$text)
+head(tweets$text_transformed)
+
+docs <- Corpus(VectorSource(tweets$text_transformed))
+```
+## Text transformation
+```{r}
+docs = tm_map(docs, content_transformer(tolower))
+
+## Remove Stopwords
+docs = tm_map(docs, removeWords, stopwords())
+docs <- tm_map(docs, removeWords, c('i', 'will', stopwords()))
+
+tdm <- TermDocumentMatrix(docs)
+words <- as.matrix(tdm)
+
+head(words)
+dim(data.frame(words))
+```
+```{r}
+words_freq <- data.frame(rowSums(words))
+head(words_freq)
+
+names(words_freq) <- 'count'
+head(words_freq)
+
+words_freq$words <- rownames(words_freq)
+head(words_freq)
+
+words_freq <- words_freq %>% arrange(-count)
+head(words_freq, 20)
+
+```
+```{r}
+top_words <- head(words_freq, 50)
+wordcloud(top_words$words, top_words$count)
+```
+# Trending Analysis
+```{r}
+tweets$created_at <- as.Date(tweets$created_at)
+head(tweets$created_at)
+
+tweets$year <- format(tweets$created_at, '%Y')
+tweets$month <- format(tweets$created_at, '%B')
+tweets$day <- format(tweets$created_at, '%d')
+tweets$month_year <- format(tweets$created_at, '%B-%Y')
+
+tweets_months <- tweets %>% group_by(month_year) %>% summarise(count=n())
+tweets_day <- tweets %>% group_by(day) %>% summarise(count=n())
+
+
+```
+
+
+
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r tweets_month, echo=FALSE}
+## ploting the dataframe using ggplot and plotly
+bar_chart_month <- ggplot(tweets_months, aes(x = reorder(month_year,-count), y = count)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light()
+ggplotly(bar_chart_month)
+
+bar_chart_day <- ggplot(tweets_day, aes(x = reorder(day,-count), y = count)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light()
+ggplotly(bar_chart_day)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

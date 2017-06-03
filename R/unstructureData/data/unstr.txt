@@ -1,0 +1,38 @@
+Unstructured data
+From Wikipedia, the free encyclopedia
+Unstructured data (or unstructured information) refers to information that either does not have a pre-defined data model or is not organized in a pre-defined manner. Unstructured information is typically text-heavy, but may contain data such as dates, numbers, and facts as well. This results in irregularities and ambiguities that make it difficult to understand using traditional programs as compared to data stored in fielded form in databases or annotated (semantically tagged) in documents.
+
+In 1998, Merrill Lynch cited a rule of thumb that somewhere around 80-90% of all potentially usable business information may originate in unstructured form.[1] This rule of thumb is not based on primary or any quantitative research, but nonetheless is accepted by some.[2]
+
+IDC and EMC project that data will grow to 40 zettabytes by 2020, resulting in a 50-fold growth from the beginning of 2010.[3] Computer World states that unstructured information might account for more than 70%–80% of all data in organizations.[4]
+
+Contents  [hide] 
+1	Background
+2	Issues with terminology
+3	Dealing with unstructured data
+4	Products
+5	See also
+6	Notes
+7	References
+8	External links
+Background[edit]
+The earliest research into business intelligence focused in on unstructured textual data, rather than numerical data.[1] As early as 1958, CS researchers like H.P. Luhn were particularly concerned with the extraction and classification of unstructured text.[1] However, only since the turn of the century has the technology caught up with the research interest. In 2004, the SAS Institute developed the SAS Text Miner, which uses SVD to reduce a hyper-dimensional textual space into smaller dimensions for significantly more efficient machine-analysis.[2] The mathematical and technological advances sparked by machine textual analysis prompted a number of business to research applications, leading to the development of fields like sentiment analysis, voice of the customer mining, and call center optimization.[3] The emergence of Big Data in the late 2000s led to a heightened interest in the applications of unstructured data analytics in contemporary fields such as predictive analytics and root cause analysis.[4]
+
+Issues with terminology[edit]
+The term is imprecise for several reasons:
+
+Structure, while not formally defined, can still be implied.
+Data with some form of structure may still be characterized as unstructured if its structure is not helpful for the processing task at hand.
+Unstructured information might have some structure (semi-structured) or even be highly structured but in ways that are unanticipated or unannounced.
+Dealing with unstructured data[edit]
+Techniques such as data mining, natural language processing (NLP), and text analytics provide different methods to find patterns in, or otherwise interpret, this information. Common techniques for structuring text usually involve manual tagging with metadata or part-of-speech tagging for further text mining-based structuring. The Unstructured Information Management Architecture (UIMA) standard provided a common framework for processing this information to extract meaning and create structured data about the information.[5]
+
+Software that creates machine-processable structure can utilize the linguistic, auditory, and visual structure that exist in all forms of human communication.[6] Algorithms can infer this inherent structure from text, for instance, by examining word morphology, sentence syntax, and other small- and large-scale patterns. Unstructured information can then be enriched and tagged to address ambiguities and relevancy-based techniques then used to facilitate search and discovery. Examples of "unstructured data" may include books, journals, documents, metadata, health records, audio, video, analog data, images, files, and unstructured text such as the body of an e-mail message, Web page, or word-processor document. While the main content being conveyed does not have a defined structure, it generally comes packaged in objects (e.g. in files or documents, …) that themselves have structure and are thus a mix of structured and unstructured data, but collectively this is still referred to as "unstructured data".[7] For example, an HTML web page is tagged, but HTML mark-up typically serves solely for rendering. It does not capture the meaning or function of tagged elements in ways that support automated processing of the information content of the page. XHTML tagging does allow machine processing of elements, although it typically does not capture or convey the semantic meaning of tagged terms.
+
+Since unstructured data commonly occurs in electronic documents, the use of a content or document management system which can categorize entire documents is often preferred over data transfer and manipulation from within the documents. Document management thus provides the means to convey structure onto document collections.
+
+Search engines have become popular tools for indexing and searching through such data, especially text.
+
+Products[edit]
+Products are available for analyzing and understanding unstructured data for business applications. This includes companies like NetOwl, LogRhythm, ZL Technologies, SAS, Provalis Research, Inxight, Datagrav,[5] and IBM's SPSS or Watson, as well as more specialized offerings such as People Pattern, Attensity, Megaputer Intelligence, Clarabridge, Graphext, Stratifyd, Medallia, General Sentiment, and Sysomos, which focus on analyzing unstructured social media data. Other vendors such as Smartlogic or IRI (CoSort) can find and structure data in unstructured sources, then integrate and transform it along with structured data for business intelligence and analytic purposes.[8]
+

@@ -1,0 +1,69 @@
+### Deleting all variables
+rm(list=ls())
+
+### Install and load libraries
+```{r,message=FALSE, warning=FALSE}
+library(twitteR)
+library(ROAuth)
+library(stringi)
+library(stringr)
+library(tm)
+library(wordcloud)
+library(NLP)
+library(SnowballC)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(rmarkdown)
+library(flexdashboard)
+```
+```{r load}
+### Set the working directory
+setwd("/Users/ritesh/pad-datascience/R/")
+#filename <- "unstructureData/data/sample.txt"
+filename <- "unstructureData/data/unstr.txt"
+sample = readChar(filename, file.info(filename)$size)
+sample
+twitterData <- readChar("unstructureData/data/twitterDoc.txt", file.info("unstructureData/data/twitterDoc.txt")$size)
+twitterData
+sample <- twitterData
+sample
+```
+
+## Number of charaters
+```{r Number of charaters}
+no_chars = str_length(sample)
+no_chars
+```
+
+```{r Numberof words}
+num_words <- str_count(sample, '\\w+')
+num_words
+```
+```{r Number of sentences, Dataframe and sort}
+num_sent <- stri_count(sample, fixed=".")
+splitWord <- str_split(sample, " ")
+freq_words <- table(splitWord)
+
+freq_words_df <- data.frame(freq_words)
+freq_words_df_sort <- freq_words_df %>% arrange(-Freq)
+freq_words_df_sort
+
+```
+```{r tm -stopwords}
+stop_words <- stopwords()
+class(stop_words)
+custom_stop_words <- c('can', 'the', 'still', 'This','May')
+stop_words <- c(stopwords(), custom_stop_words)
+#stop_words
+freq_words_df_rm_st_wr <- freq_words_df_sort[! freq_words_df_sort$splitWord %in% stop_words,]
+freq_words_df_rm_st_wr
+## ploting the dataframe using ggplot and plotly
+bar_chart <- ggplot(head(freq_words_df_rm_st_wr, 25), aes(x = reorder(splitWord,-Freq), y = Freq)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light()
+ggplotly(bar_chart)
+
+```
+
+
