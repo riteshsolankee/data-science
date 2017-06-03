@@ -18,12 +18,9 @@ library(nnet)
 library(Metrics)
 library(gbm)
 ```
-### Set the working directory
+### Set the working directory & Load data and intial analysis
 ```{r}
 setwd("/Users/ritesh/pad-datascience/R/")
-```
-### Load data and intial analysis
-```{r}
 train.df <- read.csv("ai/data/train.csv", stringsAsFactors = F)
 test.df <- read.csv("ai/data/test.csv", stringsAsFactors = F)
 str(train.df)
@@ -31,6 +28,7 @@ str(test.df)
 names(train.df)
 names(test.df)
 ```
+
 # Description:
 # The Ames Housing dataset was retrieved from https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data.
 # The dataset represents residential properties in Ames, Iowa from 2006 to 2010. There is a train and a test file.
@@ -234,13 +232,13 @@ attStats(attr_list$BOR_RESULT)
 #axis(side = 1,las=2,labels = names(Labels), at = 1:ncol(final.boruta$ImpHistory), cex.axis = 0.7)
 #########   ------  ###############
 ```
-## boxplot to dipict influincing attributes
+## Bargraph to dipict distribution of output 
 ```{r}
 library(scales)
-ggplot(train, aes(x=SalePrice)) + geom_histogram(col = 'white') + theme_light() +scale_x_continuous(labels = comma)
-summary(train[,c("SalePrice")])
+ggplot(train.df, aes(x=SalePrice)) + geom_histogram(col = 'white') + theme_light() +scale_x_continuous(labels = comma)
+summary(train.df[,c("SalePrice")])
 #Normalize distribution
-ggplot(train, aes(x=log(SalePrice+1))) + geom_histogram(col = 'white') + theme_light()
+ggplot(train.df, aes(x=log(SalePrice+1))) + geom_histogram(col = 'white') + theme_light()
 ```
 
 ###################################################################################################
