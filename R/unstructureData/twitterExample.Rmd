@@ -78,7 +78,6 @@ token_secret <- "wBF0JVMVufiLwajwHFdUbsjU9vLGxtLPye0a7FbIdpHqp"
 
 setup_twitter_oauth(api_key, api_secret, token, token_secret)
 
-
 ```
 ```{r modi's tweet}
 #modi <- userTimeline('narendramodi', 200)
@@ -86,11 +85,6 @@ modi
 df.modi = twListToDF(modi)
 dim(df.modi)
 df.modi
-```
-## Extract year, month, date
-```{r, message=FALSE, warning=FALSE}
-
-
 ```
 ## Bag of words analysis if modi's twitter
 ```{r, message=FALSE, warning=FALSE}
@@ -118,13 +112,6 @@ ggplotly(bar_chart)
 ```{r}
 ## Basic word cloud
 wordcloud(freq_words$words, freq_words$Freq, max.words = 100, random.order = T, random.color = T)
-
-word_corpus <- Corpus(VectorSource(df.modi$text))
-word_corpus
-## details are displayed with inspect()
-inspect(word_corpus[[100]])
-meta(word_corpus[[100]])
-lapply(word_corpus[1:2], as.character)
 ```
 
 

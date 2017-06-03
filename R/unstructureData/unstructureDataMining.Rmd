@@ -1,5 +1,7 @@
 ### Deleting all variables
+```{r}
 rm(list=ls())
+```
 
 ### Install and load libraries
 ```{r,message=FALSE, warning=FALSE}
@@ -50,18 +52,25 @@ freq_words_df_sort <- freq_words_df %>% arrange(-Freq)
 freq_words_df_sort
 
 ```
+## 'tm' stopword and plotting graphs
 ```{r tm -stopwords}
 stop_words <- stopwords()
 class(stop_words)
 custom_stop_words <- c('can', 'the', 'still', 'This','May')
 stop_words <- c(stopwords(), custom_stop_words)
-#stop_words
-freq_words_df_rm_st_wr <- freq_words_df_sort[! freq_words_df_sort$splitWord %in% stop_words,]
+## Removing spaces
+freq_words_df_rm_st_wr <- freq_words_df_sort[freq_words_df_sort$splitWord != "",]
+## stop_words
+freq_words_df_rm_st_wr <- freq_words_df_rm_st_wr[! freq_words_df_rm_st_wr$splitWord %in% stop_words,]
 freq_words_df_rm_st_wr
 ## ploting the dataframe using ggplot and plotly
-bar_chart <- ggplot(head(freq_words_df_rm_st_wr, 25), aes(x = reorder(splitWord,-Freq), y = Freq)) + 
+bar_chart <- 
+  ggplot(head(freq_words_df_rm_st_wr, 25), aes(x = reorder(splitWord,-Freq), y = Freq)) + 
   geom_bar(stat = 'identity') + 
-  theme_light()
+  theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+   xlab("\nWords") +
+  ylab("\nFrequency")
 ggplotly(bar_chart)
 
 ```

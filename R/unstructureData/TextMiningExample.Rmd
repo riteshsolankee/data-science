@@ -30,28 +30,34 @@ tweets <- read.csv("/Users/ritesh/pad-datascience/R/unstructureData/data/narendr
 ```
 ## Creating 'corpus' from the tweets text column
 ```{r }
+names(tweets)
 tweets$text <- as.character(tweets$text)
 tweets$text_transformed <- gsub("[^A-Za-z///' ]", " ", tweets$text)
+names(tweets)
+#View(tweets)
 head(tweets$text_transformed)
 
 docs <- Corpus(VectorSource(tweets$text_transformed))
 ```
 ## Text transformation
+The term-document matrix then is a two-dimensional matrix whose rows are the terms and columns are the documents, so each entry (i, j) represents the frequency of term i in document j.
 ```{r}
 docs = tm_map(docs, content_transformer(tolower))
 
 ## Remove Stopwords
-docs = tm_map(docs, removeWords, stopwords())
+docs <- tm_map(docs, removeWords, stopwords())
 docs <- tm_map(docs, removeWords, c('i', 'will', stopwords()))
-
+docs
 tdm <- TermDocumentMatrix(docs)
+tdm
 words <- as.matrix(tdm)
-
-head(words)
+dim(words)
+#head(words, 1)
 dim(data.frame(words))
-```
-```{r}
+#View(data.frame(words))
 words_freq <- data.frame(rowSums(words))
+
+names(words_freq)
 head(words_freq)
 
 names(words_freq) <- 'count'
@@ -62,8 +68,8 @@ head(words_freq)
 
 words_freq <- words_freq %>% arrange(-count)
 head(words_freq, 20)
-
 ```
+## WordCloud
 ```{r}
 top_words <- head(words_freq, 50)
 wordcloud(top_words$words, top_words$count)
@@ -84,25 +90,26 @@ tweets_day <- tweets %>% group_by(day) %>% summarise(count=n())
 
 ```
 
-
-
-
-
-
 ## Including Plots
-
-You can also embed plots, for example:
-
 ```{r tweets_month, echo=FALSE}
 ## ploting the dataframe using ggplot and plotly
-bar_chart_month <- ggplot(tweets_months, aes(x = reorder(month_year,-count), y = count)) + 
+bar_chart_month <- 
+  ggplot(tweets_months, aes(x = reorder(month_year,-count), y = count)) + 
   geom_bar(stat = 'identity') + 
-  theme_light()
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Tweets Count Vs Month", subtitle="Month Wise Tweet Count") + 
+  xlab("Month - Year") + 
+  ylab("Tweet Count")
 ggplotly(bar_chart_month)
 
 bar_chart_day <- ggplot(tweets_day, aes(x = reorder(day,-count), y = count)) + 
   geom_bar(stat = 'identity') + 
-  theme_light()
+  theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Tweets Count Vs Day", subtitle="Day Wise Tweet Count") + 
+  xlab("\nDay") +
+  ylab("\nTweet Count")
 ggplotly(bar_chart_day)
 ```
 
