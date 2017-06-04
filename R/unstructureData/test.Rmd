@@ -1,0 +1,186 @@
+---
+title: "test1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## clear the environment 
+```{r}
+rm(list=ls())
+```
+
+##  Load library 
+```{r load}
+library(MASS) 
+library(Metrics)
+library(corrplot)
+library(randomForest)
+library(lars)
+library(ggplot2)
+library(xgboost)
+library(Matrix)
+library(methods)
+library(caret)
+library(wordcloud)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(pdftools)
+library(tm)
+```
+## Authentication fofr API
+```{r}
+### Twitter API code ###
+# API Key : 	KTJhKKqkHpUBG7g1sijFROgWM
+# Consumer Secret (API Secret): 	iZNtlyLfhtlTOUmUeI8VAMI5HYPtZBIvQPwxFMOgjsvJ34mYQ5
+# Access Token:	147624175-9dzxj6TpkX2QFdAi2Ng6AnNo9cU7jPIEsVZRGUCc
+# Access Token Secret:	wBF0JVMVufiLwajwHFdUbsjU9vLGxtLPye0a7FbIdpHqp
+api_key <- "KTJhKKqkHpUBG7g1sijFROgWM"
+api_secret <- "iZNtlyLfhtlTOUmUeI8VAMI5HYPtZBIvQPwxFMOgjsvJ34mYQ5"
+token <- "147624175-9dzxj6TpkX2QFdAi2Ng6AnNo9cU7jPIEsVZRGUCc"
+token_secret <- "wBF0JVMVufiLwajwHFdUbsjU9vLGxtLPye0a7FbIdpHqp"
+
+#setup_twitter_oauth(api_key, api_secret, token, token_secret)
+```
+## Call API to get the tweets or read the tweets fron CSV
+```{r}
+#dt <- userTimeline('@POTUS', 20)
+#dt
+## reading tweets from csv 
+tweets <- read.csv("/Users/ritesh/pad-datascience/R/unstructureData/data/potus.csv")
+```
+## Creating the wordCloud
+```{r}
+#df.dt = twListToDF(dt)
+names(tweets)
+tweets$text <- as.character(tweets$text)
+tweets$text_transformed <- gsub("[^A-Za-z///' ]", " ", tweets$text)
+names(tweets)
+#View(tweets)
+head(tweets$text_transformed)
+
+tweets_corpus <- Corpus(VectorSource(tweets$text_transformed))
+## tolower case
+tweets_corpus = tm_map(tweets_corpus, content_transformer(tolower))
+## Remove Stopwords
+tweets_corpus <- tm_map(tweets_corpus, removeWords, stopwords())
+tweets_corpus
+
+tdm <- TermDocumentMatrix(tweets_corpus)
+df_tdm <- data.frame(as.matrix(tdm))
+dim(df_tdm)
+dtm <- DocumentTermMatrix(tweets_corpus)
+df_dtm <- data.frame(as.matrix(dtm))
+
+words_freq <- rowSums(as.matrix(tdm))
+
+words_freq_df <- data.frame(words_freq)
+words_freq_df$words <- rownames(words_freq_df)
+wordcloud(words_freq_df$words, words_freq_df$words_freq)
+
+```
+## 2. Use date column to check dat wise no. of tweets
+
+```{r}
+## converting created column to date column
+tweets$created <- as.Date(tweets$created)
+
+head(tweets$created)
+## create a day column
+tweets$day <- format(tweets$created, '%d')
+
+```
+## Ploting the graph
+```{r}
+## get the data grouped by date
+tweets_day <- tweets %>% group_by(day) %>% summarise(count=n())
+## creating the plot
+bar_chart_day <- ggplot(tweets_day, aes(x = day, y = count)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Tweets Count Vs Day", subtitle="Day Wise Tweet Count") + 
+  xlab("\nDay") +
+  ylab("\nTweet Count")
+ggplotly(bar_chart_day)
+
+```
+
+## Question - 3
+## Read pdf file
+```{r load file}
+pdf_file_path <- "/Users/ritesh/pad-datascience/R/unstructureData/data/india-after-gandhi.pdf"
+book_text <- pdf_text(pdf_file_path)
+class(book_text)
+```
+## Procession
+```{r}
+book_text_transformed <- gsub("[^A-Za-z///' ]", "", book_text)
+book_corpus <- Corpus(VectorSource(book_text_transformed))
+## tolower case
+book_corpus = tm_map(book_corpus, content_transformer(tolower))
+## Remove Stopwords
+book_corpus <- tm_map(book_corpus, removeWords, stopwords())
+
+## printing number of documents
+cat("Coupus length : ", length(book_corpus))
+#inspect(docs)
+tdm <- TermDocumentMatrix(book_corpus)
+df_tdm <- data.frame(as.matrix(tdm))
+dim(df_tdm)
+dtm <- DocumentTermMatrix(book_corpus)
+df_dtm <- data.frame(as.matrix(dtm))
+
+m_freq_words <- sort(rowSums(as.matrix(tdm)), decreasing = T)
+df_freq_words <- data.frame(m_freq_words)
+totalWords <- colSums(df_freq_words)
+
+## Printing Number of total words
+cat("Total Number of Words: " , totalWords)
+
+df_freq_words$words <- rownames(df_freq_words)
+top_10_words <-head(df_freq_words$words,10) 
+
+## printing top 10 words
+cat("Top 10 words : " , top_10_words)
+
+bottom_10_words <-tail(df_freq_words$words,10)
+
+## printing top 10 words
+cat("Top 10 words : " , bottom_10_words)
+```
+## Question 4 
+```{r}
+top_character_party <- c(
+  "bharatiya","indian","national","congress","lok","dal","janata","party",
+  "communist","telugu","desam","dravida","munnetra","kazhagam","muslim","league",
+  "rajiv","gandhi","indira","nehru","zail","mahatma")
+top_character_party <- c(
+  "bharatiya","indian","national","congress","lok","dal","janata","party",
+  "communist","telugu","desam","dravida","munnetra","kazhagam","muslim","league",
+  "rajiv","gandhi","indira","nehru","zail","mahatma")
+
+df_dtm_top <- df_dtm[,top_character_party]
+
+cor_words <- cor(df_dtm_top)
+corrplot(cor_words,method="color" )
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
