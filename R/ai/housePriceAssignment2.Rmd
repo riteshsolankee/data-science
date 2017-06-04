@@ -3,7 +3,7 @@
 rm(list=ls())
 ```
 ### Install and load libraries
-```{r load}
+```{r load, message=FALSE, warning=FALSE}
 library(ipred)
 library(data.table)
 library(caret)
@@ -501,4 +501,39 @@ colnames(l1_nnet_submission) <- c("Id","SalePrice")
 write.csv(l1_nnet_submission,file="/Users/ritesh/Documents/DataScience/AdvancedML/l1_nnet_submission.csv",row.names=FALSE)
 
 ```
+## Prediction with H2o package
+```{r}
+library(h2o)
+### To launch the H2O cluster, 
+localH2O <- h2o.init(nthreads = -1)
+
+#data to h2o cluster
+#train.h2o <- as.h2o(cleanTrain)
+#test.h2o <- as.h2o(cleanTest)
+#check column index number
+colnames(train.h2o)
+#dependent variable (Purchase)
+y.dep <- 81
+#independent variables (dropping ID variables)
+x.indep <- c(2:80)
+
+#deep learning model------------------------------------ 
+dlearning.model <- h2o.deeplearning(y = y.dep,
+                                    x = x.indep,
+                                    training_frame = train.h2o,
+                                    epoch = 1400,
+                                    hidden = c(1500,1500),
+                                    activation = "Rectifier",
+                                    seed = 1122
+)
+
+h2o.performance(dlearning.model)
+#make predictions
+predict.dl2 <- as.data.frame(h2o.predict(dlearning.model, test.h2o))
+sub_dl <- data.frame(Id = test$Id, SalePrice  =  predict.dl2$predict)
+write.csv(sub_dl, file = "/Users/ritesh/Documents/DataScience/AdvancedML/dl_submission.csv", row.names = F)
+
+h2o.shutdown(prompt = TRUE)
+```
+
 

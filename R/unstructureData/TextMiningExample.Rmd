@@ -14,6 +14,7 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 ## Load library and Read Data
 ```{r load, message=TRUE, warning=TRUE}
+rm(list=ls())
 library(tm)
 library(dplyr)
 library(stringi)
@@ -24,7 +25,6 @@ library(plotly)
 ```
 
 ```{r modiTweets}
-rm(list=ls())
 tweets <- read.csv("/Users/ritesh/pad-datascience/R/unstructureData/data/narendramodi_tweets.csv")
 
 ```
@@ -39,7 +39,7 @@ head(tweets$text_transformed)
 
 docs <- Corpus(VectorSource(tweets$text_transformed))
 ```
-## Text transformation
+## Text transformation, Creating Term Document matrix and Document term metrix
 The term-document matrix then is a two-dimensional matrix whose rows are the terms and columns are the documents, so each entry (i, j) represents the frequency of term i in document j.
 ```{r}
 docs = tm_map(docs, content_transformer(tolower))
@@ -49,12 +49,43 @@ docs <- tm_map(docs, removeWords, stopwords())
 docs <- tm_map(docs, removeWords, c('i', 'will', stopwords()))
 docs
 tdm <- TermDocumentMatrix(docs)
-tdm
 words <- as.matrix(tdm)
-dim(words)
-#head(words, 1)
-dim(data.frame(words))
-#View(data.frame(words))
+tdm
+
+words_tdm_df <- data.frame(as.matrix(tdm))
+dtm <- DocumentTermMatrix(docs)
+dtm
+
+words_dtm_df <- data.frame(as.matrix(dtm))
+words_tdm_df
+words_dtm_df
+```
+## find out association which appears the most
+```{r}
+## Filter out first top 50 words (most frequently )
+top50.df <- data.frame(rowSums(as.matrix(tdm)))
+names(top50.df) <- 'count'
+top50.df$words <- rownames(top50.df)
+
+df <- top50.df %>% arrange(-count)
+df <- head(df,50)
+top.words <- df$words
+top.words
+
+words_dtm_df_50 <- words_dtm_df[, top.words]
+words_dtm_df_50
+
+cor_words <- cor(words_dtm_df_50)
+cor_words
+```
+
+# ploting correlation graph
+```{r}
+corrplot(cor_words,method="color" )
+```
+
+
+``` {r}
 words_freq <- data.frame(rowSums(words))
 
 names(words_freq)

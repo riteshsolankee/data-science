@@ -1,0 +1,71 @@
+---
+title: "textAnalysisOnPDF"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Load Library and Read Data
+```{r load}
+rm(list=ls())
+library(pdftools)
+library(wordcloud)
+pdf <- "/Users/ritesh/pad-datascience/R/unstructureData/data/2_States_The_Story_of_My_Marriage - Chetan_Bhagat.pdf"
+book_text <- pdf_text(pdf)
+class(book_text)
+
+```
+## Create corpus 
+```{r}
+book_text_transformed <- gsub("[^A-Za-z///' ]", "", book_text)
+docs <- Corpus(VectorSource(book_text_transformed))
+## tolower case
+docs = tm_map(docs, content_transformer(tolower))
+## Remove Stopwords
+docs <- tm_map(docs, removeWords, stopwords())
+docs
+#inspect(docs)
+tdm <- TermDocumentMatrix(docs)
+df_tdm <- data.frame(as.matrix(tdm))
+dim(df_tdm)
+dtm <- DocumentTermMatrix(docs)
+df_dtm <- data.frame(as.matrix(dtm))
+## Identify top 50 words
+m_freq_words <- sort(rowSums(as.matrix(tdm)), decreasing = T)
+df_freq_words <- data.frame(m_freq_words)
+top_words_name <- rownames(head(df_freq_words, 50))
+
+df_top_words <- head(df_freq_words, 20)
+names(df_top_words)
+df_top_words$words <- rownames(df_top_words)
+wordcloud(df_top_words$words, df_top_words$m_freq_words)
+
+```
+## Creating Correlation
+```{r}
+reserved_word <- setdiff(top_words_name, colnames(df_dtm))
+new_top_words_name <- setdiff(top_words_name, reserved_word)
+#df_dtm_top <- subset(df_dtm, select= top_words_name)
+df_dtm_top <- df_dtm[,new_top_words_name]
+df_dtm_top
+cor_words <- cor(df_dtm_top)
+corrplot(cor_words,method="color" )
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
