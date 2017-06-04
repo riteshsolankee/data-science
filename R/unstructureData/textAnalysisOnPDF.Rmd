@@ -18,7 +18,7 @@ rm(list=ls())
 library(pdftools)
 library(wordcloud)
 pdf <- "/Users/ritesh/pad-datascience/R/unstructureData/data/2_States_The_Story_of_My_Marriage - Chetan_Bhagat.pdf"
-book_text <- pdf_text(pdf)
+book_text <- pdf_text(pdf) 
 class(book_text)
 
 ```
