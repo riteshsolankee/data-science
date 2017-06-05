@@ -186,25 +186,45 @@ extractFeatures <- function(train.dataframe){
   
   ### Run Boruta Analysis ###
   set.seed(13)
-  bor.results <- Boruta(train.dataframe,response,
-                        maxRuns=101,
-                        doTrace=0)
+  #bor.results <- Boruta(train.dataframe,response,
+  #                      maxRuns=101,
+  #                      doTrace=0)
   
   # Print Boruta result
-  print(bor.results)
+  #print(bor.results)
   ## Bucketing attributes as 'Confirmed', 'Tentative' and 'Rejected' :
-  CONFIRMED_ATTR <- getSelectedAttributes(bor.results, withTentative = F)
-  CONFIRMED_ATTR_WITH_TENTATIVE <- getSelectedAttributes(bor.results, withTentative = T)
-  TENTATIVE_ATTR <- CONFIRMED_ATTR_WITH_TENTATIVE[which(!CONFIRMED_ATTR_WITH_TENTATIVE %in% CONFIRMED_ATTR)]
-  REJECTED_ATTR <- names(train.dataframe)[!(names(train.dataframe) %in% CONFIRMED_ATTR_WITH_TENTATIVE)]
-  PREDICTOR_ATTR <- c(CONFIRMED_ATTR,TENTATIVE_ATTR,REJECTED_ATTR)
+  #CONFIRMED_ATTR <- getSelectedAttributes(bor.results, withTentative = F)
+  #CONFIRMED_ATTR_WITH_TENTATIVE <- getSelectedAttributes(bor.results, withTentative = T)
+  #TENTATIVE_ATTR <- CONFIRMED_ATTR_WITH_TENTATIVE[which(!CONFIRMED_ATTR_WITH_TENTATIVE %in% CONFIRMED_ATTR)]
+  #REJECTED_ATTR <- names(train.dataframe)[!(names(train.dataframe) %in% CONFIRMED_ATTR_WITH_TENTATIVE)]
+  #PREDICTOR_ATTR <- c(CONFIRMED_ATTR,TENTATIVE_ATTR,REJECTED_ATTR)
   
+  #return(list(
+  #  CONFIRMED_ATTR = CONFIRMED_ATTR,
+  #  TENTATIVE_ATTR = TENTATIVE_ATTR,
+  #  REJECTED_ATTR = REJECTED_ATTR, 
+  #  PREDICTOR_ATTR = PREDICTOR_ATTR,
+  #  BOR_RESULT = bor.results))
+  
+  CONFIRMED_ATTR <- c(
+    "MSSubClass", "MSZoning", "LotFrontage", "LotArea", "LotShape", "LandContour", "Neighborhood", "BldgType",
+    "HouseStyle", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "Exterior1st", "Exterior2nd", "MasVnrArea",
+    "ExterQual", "Foundation", "BsmtQual", "BsmtExposure", "BsmtFinType1", "BsmtFinSF1", "BsmtUnfSF", "TotalBsmtSF",
+    "HeatingQC", "CentralAir", "Electrical", "X1stFlrSF", "X2ndFlrSF", "GrLivArea", "BsmtFullBath", "FullBath",
+    "HalfBath", "BedroomAbvGr", "KitchenAbvGr", "KitchenQual", "TotRmsAbvGrd", "Functional", "Fireplaces", "FireplaceQu",
+    "GarageType", "GarageYrBlt", "GarageFinish", "GarageCars", "GarageArea", "GarageQual", "GarageCond", "PavedDrive",
+    "WoodDeckSF", "OpenPorchSF")
+  TENTATIVE_ATTR <- c(
+    "Alley", "LandSlope", "Condition1", "RoofStyle", "MasVnrType", "EnclosedPorch", "SaleCondition")
+  REJECTED_ATTR <- c(
+    "Street", "Utilities", "LotConfig", "Condition2", "RoofMatl", "ExterCond", "BsmtCond",
+    "BsmtFinType2","BsmtFinSF2", "Heating", "LowQualFinSF", "BsmtHalfBath", "X3SsnPorch", "ScreenPorch",
+    "PoolArea", "PoolQC", "Fence", "MiscFeature", "MiscVal", "MoSold", "YrSold", "SaleType")
   return(list(
     CONFIRMED_ATTR = CONFIRMED_ATTR,
     TENTATIVE_ATTR = TENTATIVE_ATTR,
-    REJECTED_ATTR = REJECTED_ATTR, 
-    PREDICTOR_ATTR = PREDICTOR_ATTR,
-    BOR_RESULT = bor.results))
+    REJECTED_ATTR = REJECTED_ATTR))
+  
 }
 
 attr_list <- extractFeatures(train_df)
@@ -232,6 +252,50 @@ attStats(attr_list$BOR_RESULT)
 #axis(side = 1,las=2,labels = names(Labels), at = 1:ncol(final.boruta$ImpHistory), cex.axis = 0.7)
 #########   ------  ###############
 ```
+
+## Creating boolean columns from factor variables
+## Feature Set with binomial column from factor - Boruta Confirmed and tentative Attributes
+```{r}
+#featureSet <- function(df) { 
+  id <- train_df$Id
+  if (class(train_df$SalePrice) != "NULL") {
+    y <- log(train_df$SalePrice)
+  } else {
+    y <- NULL
+  }
+  
+  predictor_vars <- c(attr_list$CONFIRMED_ATTR,attr_list$TENTATIVE_ATTR)
+  predictors <- train_df[c(predictor_vars, "Id")]
+  # for character  atributes set missing value
+  char_attr <- intersect(predictor_vars,DATA_ATTR_TYPES$character)
+  for (x in char_attr){
+    predictors[[x]] <- factor(predictors[[x]])
+  }
+  factor.df <- predictors[, c("Id",char_attr)]
+  factor.df1 <- 
+    model.matrix(
+      ~.+0, 
+      data=factor.df, 
+      contrasts.arg=sapply(factor.df[, setdiff(char_attr,c("Id"))], contrasts, contrasts=F))
+  factor.df1 <- data.frame(factor.df1)
+  #View(factor.df1)
+  class(factor.df1)
+  non.factor.df <- predictors[, c(setdiff(predictor_vars, char_attr),c("Id"))]
+  
+  #View(non.factor.df)
+  dim(non.factor.df)
+  predictors.new <- merge(non.factor.df, factor.df1, by = "Id")
+  
+  #predictors.new$Id <- as.integer(predictors.new$Id)
+  non.factor.df$Id
+  factor.df1$Id
+  dim(predictors.new)
+  View(predictors.new)
+  
+ # return(list(id=id,y=y,predictors=predictors))
+#}
+```
+
 ## Bargraph to dipict distribution of output 
 ```{r}
 library(scales)
