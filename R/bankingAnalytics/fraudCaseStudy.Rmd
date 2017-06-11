@@ -1,0 +1,92 @@
+---
+title: "FraudDetection"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+## Load libraries
+```{r Load}
+library(caret)
+library(VIM)
+library(ggplot2)
+```
+## Read data
+```{r}
+setwd("/Users/ritesh/pad-datascience/R/")
+
+### Load data and intial analysis
+fraud <- read.csv("bankingAnalytics/data/Fraud prediction.csv", stringsAsFactors = F)
+
+head(fraud)
+```
+## Data Claenup
+```{r}
+aggr(fraud, prop=T, numbers=T)
+summary(fraud)
+
+# 20% of age vars has missing  vals, remove it
+fraud$Age <- NULL
+# drop name; chagne sex to dummay variable; change marital status
+# Remove primaru key like columns
+fraud$Name <- NULL
+xtabs(~fraud$Sex)
+
+fraud$male <- ifelse(fraud$Sex=="male", 1,0) # dummay variable
+xtabs(~fraud$male)
+
+xtabs(~fraud$MaritalStatus)
+
+fraud$single <- ifelse(fraud$MaritalStatus=="S",1,0)
+fraud$Couple <- ifelse(fraud$MaritalStatus=="C",1,0)
+
+xtabs(~fraud$single+ fraud$Couple)
+
+fraud$Sex <- NULL
+fraud$MaritalStatus <- NULL
+
+str(fraud)
+
+#C - I want to create a 25% sample for validation - called testing datasest
+
+smp_size <- floor(0.75 * nrow(fraud))
+set.seed(123)
+
+train_ind <- sample(seq_len(nrow(fraud)), size = smp_size)
+
+train <- fraud[train_ind,]
+test <- fraud[-train_ind,]
+
+# check count 0f 0 -1 in test data for  the Y variable Fraud
+xtabs(~test$Fraud)
+
+# move the fraud = 0 145 row into a new dataset and creaed 78 obs sample
+
+newtest1 <- test[which(test$Fraud==0), ]
+dim(newtest1)
+
+newtest2 <- test[which(test$Fraud==1), ]
+dim(newtest2)
+
+
+smp_size <- floor(0.54 * nrow(newtest1))
+set.seed(123)
+train_ind <- sample(seq_len(nrow(newtest1)), size = smp_size)
+
+
+
+```
+
+## Including Plots

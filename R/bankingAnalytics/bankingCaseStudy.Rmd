@@ -1,0 +1,109 @@
+---
+title: "BankingCaseStudy1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+## Load libraries
+```{r Load}
+library(outliers)
+library(ggplot2)
+```
+## Read data
+```{r}
+setwd("/Users/ritesh/pad-datascience/R/")
+
+### Load data and intial analysis
+data <- read.csv("bankingAnalytics/data/Electronic Funds transfer data_volume.csv", stringsAsFactors = F)
+# D - define - What can be expected valolume for different claen methods available from the electronic payment Systems
+# c- not required as 1 dataset
+head(data)
+```
+## Exploring data
+```{r}
+dim(data)
+str(data)
+names(data)
+head(data)
+```
+## data cleaning
+```{r}
+data[data=='h'] <- NA
+data[!complete.cases(data), ]
+nrow(data[!complete.cases(data),])
+
+# removing NA
+data1 <- na.omit(data)
+dim(data1)
+str(data1)
+
+## becauseof h it is being read as char
+## convert to numeric
+data1$RTGSvolume <- as.numeric(data1$RTGSvolume)
+data1$NEFTvolume <- as.numeric(data1$NEFTvolume)
+data1$CTS.volume <- as.numeric(data1$CTS.volume)
+data1$NACH.volume <- as.numeric(data1$NACH.volume)
+
+## Converting the character
+data1$Data.for.the.period_JAN2017 <- as.character(data1$Data.for.the.period_JAN2017)
+
+```
+## Outliers
+```{r}
+data2 <- data1
+
+findOutliers <- function(df, cutoff = 3) {
+  ## Calculate the sd
+  sds <- apply(df, 2, sd, na.rm=T)
+  ## Identufy the cell with value greater than cutoff * sd (column wise)
+  result <- mapply(function(d, s){
+    which(d > cutoff * s)
+  }, df, sds)
+  result
+}
+
+outliers <- findOutliers(data2)
+outliers
+
+# The data shows a lot of variation, hence so many are getting labbelled as outliers as per normal distribution
+# We will consider that the data is not normal and go ahead to understand descroptive statistics
+
+## Summary
+summary(outliers)
+fivenum(data1$RTGSvolume)
+
+sd(data1$RTGSvolume)
+boxplot(data1$RTGSvolume)
+plot(density(data1$RTGSvolume))
+
+
+boxplot(data1$NEFTvolume)
+plot(density(data1$NEFTvolume))
+
+#ggplot(data1, )
+
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure) 
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
