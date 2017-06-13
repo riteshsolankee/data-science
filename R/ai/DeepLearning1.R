@@ -1,4 +1,5 @@
 #install and load the package
+rm(list=ls())
 install.packages("data.table")
 library(data.table)
 library(reshape)
@@ -25,8 +26,9 @@ library(sqldf)
 # STEP 1 : Explore the Data and handle Missing Values
 
 #load data using fread
-train <- fread("/Users/ritesh/Documents/DataScience/advanceBigData/AdvancedML/train.csv", stringsAsFactors = T)
-test <- fread("/Users/ritesh/Documents/DataScience/advanceBigData/AdvancedML/test.csv", stringsAsFactors = T)
+setwd("/Users/ritesh/pad-datascience/R/")
+train <- fread("ai/data/train.csv", stringsAsFactors = T)
+test <- fread("ai/data/test.csv", stringsAsFactors = T)
 
 
 #Look at Missing Values
@@ -41,7 +43,7 @@ contents(test)
 
 #first prediction using mean
 sub_mean <- data.frame(Id = test$Id, SalePrice = mean(train$SalePrice))
-write.csv(sub_mean, file = "/Users/ritesh/Documents/DataScience/advanceBigData/AdvancedML/sub1.csv", row.names = F)
+write.csv(sub_mean, file = "/Users/ritesh/Downloads/sub1.csv", row.names = F)
 
 ### Create the dummy variable to combine the data using rbind
 test$SalePrice=0
@@ -364,9 +366,11 @@ write.csv(sub_rbm, file = "/Users/ritesh/Documents/DataScience/advanceBigData/Ad
 dlearning.model <- h2o.deeplearning(y = y.dep,
                                     x = x.indep,
                                     training_frame = train.h2o,
-                                    epoch = 1400,
+                                    epoch = 1500,
                                     hidden = c(1500,1500),
                                     activation = "Rectifier",
+                                    l1=1e-6,
+                                    l2=1e-6,
                                     seed = 1122
 )
 
@@ -374,7 +378,7 @@ h2o.performance(dlearning.model)
 #make predictions
 predict.dl2 <- as.data.frame(h2o.predict(dlearning.model, test.h2o))
 sub_dl <- data.frame(Id = test$Id, SalePrice  =  predict.dl2$predict)
-write.csv(sub_dl, file = "/Users/ritesh/Documents/DataScience/advanceBigData/AdvancedML/sub12.csv", row.names = F)
+write.csv(sub_dl, file = "/Users/ritesh/Downloads/dl_submission7.csv", row.names = F)
 
 
 h2o.shutdown(prompt = TRUE)

@@ -1,0 +1,134 @@
+---
+title: "DelinquentAmount"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+
+```{r load}
+library(readxl)
+library(VIM)
+library(ggplot2)
+library(reshape)
+```
+
+## Set the working directory & Load data and intial analysis
+```{r}
+setwd("/Users/ritesh/pad-datascience/R/")
+
+### Load data and intial analysis
+risk_data <- read_excel("bankingAnalytics/data/DelinquentAmount.xlsx")
+dim(risk_data)
+head(risk_data)
+class(risk_data$AmountDelinquent)
+table(risk_data$LoanStatus)
+```
+## Filter out unnessasary data
+```{r}
+
+risk_data$ListingKey <- NULL
+table(risk_data$LoanStatus)
+round(prop.table(table(risk_data$LoanStatus)) * 100,2)
+
+risk_data <- subset(risk_data, !(LoanStatus %in% c("Cancelled", "Chargedoff", "Completed", "FinalPaymentInProgress")))
+head(risk_data)
+table(risk_data$LoanStatus)
+
+miss <- aggr(risk_data, col=c('lightblue','orange'),
+             numbers=TRUE, sortVars=TRUE,
+             labels=names(risk_data), cex.axis=.3,
+             gap=3, ylab=c("Missing data","Pattern"))
+
+miss
+# create new dataset without missing data
+risk <- na.omit(risk_data) 
+dim(risk)
+table(risk_data$LoanStatus)
+names(risk)
+
+table(risk$CreditScoreRangeLower)
+
+
+
+
+
+```
+## Organize and Visualization
+# OUTLIERS
+```{r}
+plot(density(risk$AmountDelinquent))
+
+# Check outliers - UNIVARIATE
+# outlier_values <- boxplot.stats(risk$AmountDelinquent)$out 
+# length(outlier_values)
+
+boxplot(risk$AmountDelinquent)
+
+## Visualization
+r3 <- risk
+names(risk)
+r3$ListingKey <- NULL
+r3$CreditScoreRangeLower <- NULL
+#r3$LoanStatus <- NULL
+table(r3$LoanStatus)
+names(r3)
+r3.m <- melt(r3, id.var = "LoanStatus")
+head(r3.m)
+library(ggplot2)
+
+ggplot(data = r3.m, aes(x=LoanStatus, y=value)) + 
+  geom_boxplot(aes(fill = LoanStatus))
+```
+## Analyze
+```{r}
+# show error
+# shapiro.test(risk$AmountDelinquent)
+
+# Create 4900 DataPoints since the below mentioned test works only from 3 - 5000 obs
+# test for normal distribution 
+
+# sample rows 
+df <- risk[sample(nrow(risk),5000), ]
+dim(df)
+
+
+shapiro.test(df$AmountDelinquent)
+
+# The null-hypothesis of this test is that the population is normally distributed.
+# Thus, if the p-value is less than the chosen alpha level, then the null hypothesis is 
+# rejected and there is evidence that the data tested are not from a normally distributed population; 
+# in other words, the data are not normal.
+
+# Therefore we can use the under Chebyshev's inequality a minimum of just 75% of 
+# values must lie within two standard deviations of the mean and 89% within three standard deviations
+# to draw inferences
+
+table(risk$LoanStatus)
+risk$LoanStatus1 <- ifelse(risk$LoanStatus == "Current","Current","Defaulted")
+table(risk$LoanStatus1)
+
+
+library(psych)
+# describeBy(risk$AmountDelinquent, group=risk$LoanStatus, mat= TRUE, type=3,digits=7)
+
+describeBy(risk$AmountDelinquent, group=risk$LoanStatus1, mat= TRUE, type=3,digits=7)
+
+# conclusion using Chebychev's theorem
+# there are 2 status group - defauled and current
+# 75% of the status = "Current" loans are upto Rs 15961.7 ## [ mean + 2 X sd]  ## 912.89 + 2*7524.406
+# 75% of the status = "Defaulted" loans are upto 14962.74 ### 1285.65 + 2*6838.544
+
+```
+

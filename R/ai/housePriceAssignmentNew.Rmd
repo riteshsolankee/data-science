@@ -18,7 +18,7 @@ When you click the **Knit** button a document will be generated that includes bo
 rm(list=ls())
 ```
 ## Install and load libraries
-```{r, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(ipred)
 library(data.table)
 library(caret)
@@ -68,7 +68,7 @@ so we'll need to convert these predictions back to their original form later
 # combine train and test data for preprocessing
 nrow(train.df)
 all_data <- rbind(train.df[,1:(ncol(train.df) - 1)],
-                  test.df[,1:(ncol(train.df) - 1)])
+                  test.df[,1:(ncol(train.df)-1)])
 dim(all_data)
 ```
 ```{r}
@@ -94,7 +94,7 @@ Mode <- function(x) {
 }
 
 imputeMissingAttributes <- function(df){
-  #df <- all_data
+  # df <- all_data
   # for character  attributes set missing value
   char_attr <- intersect(names(df),DATA_ATTR_TYPES$character)
   for (x in char_attr){
@@ -153,10 +153,10 @@ imputeMissingAttributes <- function(df){
   df$Alley[is.na(df$Alley)]="Noalley"
   
   #### LotFrontage and GarageYrblt is Major missing Values in data
-  #### and can be replaced with bagImpute using Propress
-  df_preprocess = preProcess(df[,c("LotFrontage","GarageYrBlt")],method="bagImpute")
+  #### and can be replaced with bagImpute using PreProcess
+  df_preprocess = preProcess(df[,c("LotFrontage","GarageYrBlt")], method="bagImpute")
   summary(df_preprocess) 
-  df_pred= predict(df_preprocess,df[,c("LotFrontage","GarageYrBlt")],type="class")
+  df_pred = predict(df_preprocess,df[,c("LotFrontage","GarageYrBlt")],type="class")
   df$LotFrontage = df_pred$LotFrontage
   df$GarageYrBlt = df_pred$GarageYrBlt
   
@@ -165,27 +165,14 @@ imputeMissingAttributes <- function(df){
 }
 
 all.data <- imputeMissingAttributes(all_data)
-#all.data <- df
-# #View(train_df)
 Num_NA_all <- sapply(all.data,function(y)length(which(is.na(y)==T)))
 NA_Count_all <- data.frame(Item=colnames(all.data),Count=Num_NA_all)
 NA_Count_all
 
 dim(all.data)
 
-# #View(train_df)
-# Num_NA_train <- sapply(train_df,function(y)length(which(is.na(y)==T)))
-# NA_Count_train <- data.frame(Item=colnames(train_df),Count=Num_NA_train)
-# NA_Count_train
-# 
-# test_df <- imputeMissingAttributes(test.df)
-# 
-# Num_NA_test <- sapply(test_df,function(y)length(which(is.na(y)==T)))
-# NA_Count_test <- data.frame(Item=colnames(test_df),Count=Num_NA_test)
-# NA_Count_test
-# 
-# View(train_df)
 ```
+## Check if the response column is normally distrinuted. If not, then use 'log' function 
 ```{r}
 # get data frame of SalePrice and log(SalePrice + 1) for plotting
 df <- rbind(data.frame(version="log(price+1)",x=log(train.df$SalePrice)),
@@ -196,12 +183,12 @@ ggplot(data=df) +
   facet_wrap(~version,ncol=2,scales="free_x") +
   geom_histogram(aes(x=x))
 ```
+## Check if numerical variables are normally distributed or not. If not, normalize it using 'log' function 
 ```{r}
 # transform SalePrice target to log form
 train.df$SalePrice <- log(train.df$SalePrice)
 
 #View(all.data)
-
 # for numeric feature with excessive skewness, perform log transformation
 # first get data type for each feature
 feature_classes <- sapply(names(all.data),function(x){class(all.data[[x]])})
@@ -219,8 +206,8 @@ for(x in names(skewed_feats)) {
 }
 
 ```
-## Imputing categorical variable
-```{r In_7}
+## Creating dummy variables from categorical attributes
+```{r }
 # get names of categorical features
 categorical_feats <- names(feature_classes[feature_classes == "character"])
 
@@ -230,21 +217,19 @@ categorical_1_hot <- predict(dummies,all.data[categorical_feats])
 categorical_1_hot[is.na(categorical_1_hot)] <- 0  #for any level that was NA, set to zero
 
 ```
-####In [9]
+## reconstruct all_data with pre-processed data
 ```{r In_9}
-# reconstruct all_data with pre-processed data
 all.data <- cbind(all.data[numeric_feats],categorical_1_hot)
 
 # create data for training and test
 X_train <- all.data[1:nrow(train.df),]
 X_test <- all.data[(nrow(train.df)+1):nrow(all.data),]
 y <- train.df$SalePrice
-#View(X_train)
-#X_train$SalePrice <- y
+
 dim(X_train)
 ```
 
-######## Features selection (using Boruta) 
+## Features selection (using Boruta) 
 ```{r}
 extractFeatures <- function(train.dataframe, response){
   #train.dataframe <- X_train
@@ -262,18 +247,19 @@ extractFeatures <- function(train.dataframe, response){
   attr.data.types <- lapply(unique.classes,function(x){names(data.classes[data.classes==x])})
   names(attr.data.types) <- unique.classes
   
-  # Prepare data set for Boruta analysis. As Boruta uses Random forest, missng data needs to be fixed
-  # pull out the response variable
-  # response <- y
+  # Prepare data set for Boruta analysis. As Boruta uses Random forest, missng data needs to be fixed before applying the 
+  # algorithm
   
   # remove identifier and response variables
   train.dataframe <- train.dataframe[candidate.features]
   
   ### Run Boruta Analysis ###
   set.seed(13)
-  bor.results <- Boruta(train.dataframe,response,
-                       maxRuns=201,
-                       doTrace=0)
+  bor.results <- Boruta(
+                        train.dataframe,
+                        response,
+                        maxRuns=201,
+                        doTrace=0)
   
   # Print Boruta result
   print(bor.results)
@@ -294,9 +280,11 @@ extractFeatures <- function(train.dataframe, response){
 }
 
 attr_list <- extractFeatures(X_train, y)
+```
 
-
-### plot the boruta variable importance chart.
+## plot the boruta variable importance chart.
+Blue boxplots correspond to minimal, average and maximum Z score of a shadow attribute. Red, yellow and green boxplots represent Z scores of rejected, tentative and confirmed attributes respectively.
+```{r }
 # Blue boxplots correspond to minimal, average and maximum Z score of a shadow attribute. Red, yellow and green boxplots
 # represent Z scores of rejected, tentative and confirmed attributes respectively.
 plot(attr_list$BOR_RESULT, xlab = "", xaxt = "n")
@@ -336,25 +324,30 @@ test.h2o <- as.h2o(h2o.test.df)
 #check column index number
 colnames(train.h2o)
 #dependent variable (Purchase)
-y.dep <- 121
+y.dep <- 117
 #independent variables (dropping ID variables)
-x.indep <- c(1:120)
+x.indep <- c(1:116)
 
 #deep learning model------------------------------------ 
 dlearning.model <- h2o.deeplearning(y = y.dep,
                                     x = x.indep,
                                     training_frame = train.h2o,
-                                    epoch = 6000,
-                                    hidden = c(6000,6000),
+                                    epoch = 1500,
+                                    hidden = c(1500, 1500, 1500, 1500),
                                     activation = "Rectifier",
-                                    seed = 1122
+                                    seed = 1122,
+                                    rate = 0.01,
+                                    l1=1e-6,
+                                    l2=1e-6,
+                                    max_w2=10
+                                    
 )
 
 h2o.performance(dlearning.model)
 #make predictions
 predict.dl2 <- as.data.frame(h2o.predict(dlearning.model, test.h2o))
 sub_dl <- data.frame(Id = test.df$Id, SalePrice  = exp(predict.dl2$predict))
-write.csv(sub_dl, file = "/Users/ritesh/Downloads/dl_submission3.csv", row.names = F)
+write.csv(sub_dl, file = "/Users/ritesh/Downloads/dl_submission5.csv", row.names = F)
 
 h2o.shutdown(prompt = TRUE)
 

@@ -20,6 +20,8 @@ rm(list=ls())
 
 ```{r load}
 library(readxl)
+library(VIM)
+library(ggplot2)
 ```
 
 ## Set the working directory & Load data and intial analysis
@@ -32,6 +34,38 @@ data <- read_excel("bankingAnalytics/data/RateAndYield.xlsx")
 ## check data
 dim(data)
 names(data)
+sapply(data, class)
+
+nrow(data[!complete.cases(data),])
+miss <- aggr(data, prop=F, col=c('lightgreen', 'salmon'),
+             numbers=T, sortVars=T, 
+             labels=names(data), cex.axis = 0.3,
+             gap=3, ylab=c("Missing data", "Pattern"))
+```
+## Dealing with missing values
+```{r}
+## Very small percentage of data is missing, so we can ignore the data
+data <- na.omit(data)
+head(data)
+
+```
+## Outliers
+```{r}
+
+boxplot(data$BorrowerRate)
+
+lapply(data, boxplot)
+```
+## Data Visualization
+```{r}
+ggplot(data, aes(x=BorrowerRate, y=LenderYield)) + 
+  geom_point(shape=21, colour ="mediumvioletred", fill="springgreen", size=1)
+```
+## t- test
+```{r}
+t.test(data$BorrowerAPR, data$BorrowerRate)
+## p-value is less than 0.05
+## reject the null hypothesis that both are equal
 
 ```
 
