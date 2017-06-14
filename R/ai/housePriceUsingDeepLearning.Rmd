@@ -1,0 +1,493 @@
+---
+title: "House Price Using H2o DeepLearning Algorithm"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+
+
+## Install and load libraries
+```{r}
+#install.packages("data.table")
+library(data.table)
+library(reshape)
+library(reshape2)
+library(Hmisc, quietly=TRUE)
+library(dplyr)
+library(Amelia)
+library(fBasics, quietly=TRUE)
+library(mice)
+library(caret)
+library(dummies)
+library(ggplot2)
+library(scales)
+library(e1071)
+library(corrplot)
+library(vcd)
+library(VIM)
+library(nnet)
+library(Metrics)
+library(sqldf)
+library(h2o)
+```
+## Load test and train data
+```{r}
+## function to calculate 'mode'
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+#load data using fread
+setwd("c:/Users/A038246/Documents/data-science/R/")
+train <- fread("ai/data/train.csv", stringsAsFactors = T)
+test <- fread("ai/data/test.csv", stringsAsFactors = T)
+```
+```{r }
+## Look at Missing Values
+str(train)
+missmap(train)
+colSums(sapply(train,is.na))
+contents(train)
+str(test)
+missmap(test)
+colSums(sapply(test,is.na))
+contents(test)
+```
+## Combine test and train data for data imputation
+```{r }
+### Create the dummy variable to combine the data using rbind
+test$SalePrice=0
+summary(test$SalePrice)
+
+### Combining the data 
+train_data=rbind(train,test)
+```
+## Visualization of combined data
+```{r }
+missmap(train_data)
+colSums(sapply(train_data,is.na))
+contents(train_data)
+```
+## STEP 1 : Explore the Data and handle Missing Values
+```{r}
+### Handling the NA Values
+aggr_plot1 <- 
+  aggr(
+    train_data[1:15], 
+    col=c('navyblue','red'), 
+    numbers=TRUE, 
+    sortVars=TRUE, 
+    labels=names(data), 
+    cex.axis=.7,
+    gap=3, 
+    ylab=c("Histogram of missing data","Pattern"))
+```
+```{r }
+describe(train_data$MSZoning) 
+##### Data Having only 4 missing Values, % of Missing Values is 0.0013.
+##### So we can replace with mode(most often) value.
+train_data$MSZoning[is.na(train_data$MSZoning)]=Mode(train_data$MSZoning)
+train_data$MSZoning<-as.factor(train_data$MSZoning)
+describe(train_data$MSZoning) 
+```
+```{r}
+describe(train_data$Alley)
+#### Data Having 93% of NA'S, but replacing the values as "Noalley"
+train_data$Alley= as.character(train_data$Alley)
+train_data$Alley[is.na(train_data$Alley)]= "Noalley"
+train_data$Alley = as.factor(train_data$Alley)
+describe(train_data$Alley)
+```
+## Utilities
+```{r}
+describe(train_data$Utilities)
+##### Data Having only 2 missing Values, % of Missing Values is 0.0006851662.
+##### So we can replace with mode(most often) value.
+train_data$Utilities[is.na(train_data$Utilities)]=Mode(train_data$Utilities) #"AllPub"
+is.factor(train_data$Utilities)
+describe(train_data$Utilities)
+```
+## MasVnrType
+```{r }
+describe(train_data$MasVnrType)
+#### Data Having 24 missing Values, total % of Missing Values is 0.008.
+##### So we can replace with mode(most often) value.
+train_data$MasVnrType[which(is.na(train_data$MasVnrType))]= Mode(train_data$MasVnrType)
+summary(train_data$MasVnrType)
+is.factor(train_data$MasVnrType)
+
+describe(train_data$MasVnrType)
+```
+## MasVnrArea
+```{r }
+describe(train_data$MasVnrArea)
+#### Data Having 23 missing Values, total % of Missing Values is 0.008,
+####  AND also data having extrem outliers, so we are replacing the values to Median
+ggplot(train_data, aes(y=MasVnrArea)) +
+  geom_boxplot(aes(x="All"), notch=TRUE, fill="grey") +
+  stat_summary(aes(x="All"), fun.y=mean, geom="point", shape=8) +
+  ggtitle("Distribution of MasVnrArea") +
+  theme(legend.position="none")
+
+train_data$MasVnrArea[which(is.na(train_data$MasVnrArea))]= median(train_data$MasVnrArea,na.rm=TRUE)
+describe(train_data$MasVnrArea)
+```
+## Exterior1st
+```{r }
+describe(train_data$Exterior1st)
+### Data having only one Missing Values, total % of Missing Values is 0.0003425831.
+##### So we can replace with mode(most often) value.
+train_data$Exterior1st[which(is.na(train_data$Exterior1st))] = Mode(train_data$Exterior1st) # "VinylSd"
+describe(train_data$Exterior1st)
+```
+## Exterior2nd
+```{r }
+describe(train_data$Exterior2nd)
+### Data having only one Missing Values, total % of Missing Values is 0.0003425831. 
+##### So we can replace with mode(most often) value.
+train_data$Exterior2nd[which(is.na(train_data$Exterior2nd))]=Mode(train_data$Exterior2nd) #"VinylSd"
+describe(train_data$Exterior2nd)
+```
+## BsmtCond
+```{r }
+colSums(sapply(train_data,is.na))
+
+describe(train_data$BsmtCond)
+### As per the Project discription NA values are replaced to "NoBasement"
+train_data$BsmtCond = as.character(train_data$BsmtCond)
+train_data$BsmtCond[which(is.na(train_data$BsmtCond))]="NoBasement"
+train_data$BsmtCond = as.factor(train_data$BsmtCond)
+describe(train_data$BsmtCond)
+```
+## BsmtExposure
+```{r}
+describe(train_data$BsmtExposure)
+### As per the Project discription NA values are replaced to "NoBasement"
+train_data$BsmtExposure = as.character(train_data$BsmtExposure)
+train_data$BsmtExposure[which(is.na(train_data$BsmtExposure))]="NoBasement"
+train_data$BsmtExposure = as.factor(train_data$BsmtExposure)
+describe(train_data$BsmtExposure)
+```
+## BsmtQual
+```{r}
+describe(train_data$BsmtQual)
+### As per the Project discription NA values are replaced to "NoBasement"
+train_data$BsmtQual = as.character(train_data$BsmtQual)
+train_data$BsmtQual[which(is.na(train_data$BsmtQual))]="NoBasement"
+train_data$BsmtQual = as.factor(train_data$BsmtQual)
+describe(train_data$BsmtQual)
+```
+## BsmtFinType2
+```{r}
+describe(train_data$BsmtFinType2)
+### As per the Project discription NA values are replaced to "NoBasement"
+train_data$BsmtFinType2 = as.character(train_data$BsmtFinType2)
+train_data$BsmtFinType2[which(is.na(train_data$BsmtFinType2))]="NoBasement"
+train_data$BsmtFinType2 = as.factor(train_data$BsmtFinType2)
+describe(train_data$BsmtFinType2)
+```
+## BsmtFinType1
+```{r}
+describe(train_data$BsmtFinType1)
+### As per the Project discription NA values are replaced to "NoBasement"
+train_data$BsmtFinType1 = as.character(train_data$BsmtFinType1)
+train_data$BsmtFinType1[which(is.na(train_data$BsmtFinType1))]="NoBasement"
+train_data$BsmtFinType1 = as.factor(train_data$BsmtFinType1)
+describe(train_data$BsmtFinType1)
+```
+## BsmtFinSF1
+```{r }
+describe(train_data$BsmtFinSF1)
+### Data Having 1 missing Values, Replaced NA using median value
+ggplot(train_data, aes(y=BsmtFinSF1)) +
+  geom_boxplot(aes(x="All"), notch=TRUE, fill="grey") +
+  stat_summary(aes(x="All"), fun.y=mean, geom="point", shape=8) +
+  ggtitle("Distribution of BsmtFinSF1") +
+  theme(legend.position="none")
+
+train_data$BsmtFinSF1[which(is.na(train_data$BsmtFinSF1))]=median(train_data$BsmtFinSF1,na.rm=TRUE)
+describe(train_data$BsmtFinSF1)
+```
+## BsmtFinSF2, BsmtUnfSF, TotalBsmtSF
+```{r }
+describe(train_data$BsmtFinSF2)
+### Data Having 1 missing Values, Replaced NA using median value
+train_data$BsmtFinSF2[which(is.na(train_data$BsmtFinSF2))]=median(train_data$BsmtFinSF2,na.rm=TRUE)
+
+describe(train_data$BsmtUnfSF)
+### Data Having 1 missing Values, Replaced NA using median value
+train_data$BsmtUnfSF[which(is.na(train_data$BsmtUnfSF))]=median(train_data$BsmtUnfSF,na.rm=TRUE)
+
+describe(train_data$TotalBsmtSF)
+### Data Having 1 missing Values, Replaced NA using median value
+train_data$TotalBsmtSF[which(is.na(train_data$TotalBsmtSF))]=median(train_data$TotalBsmtSF,na.rm=TRUE)
+```
+## Electrical
+```{r }
+colSums(sapply(train_data,is.na))
+
+describe(train_data$Electrical)
+### Data Having 1 missing Values, Replaced NA using mode value
+train_data$Electrical[which(is.na(train_data$Electrical))]=Mode(train_data$Electrical) #"SBrkr"
+is.factor(train_data$Electrical)
+describe(train_data$Electrical)
+```
+## BsmtFullBath
+```{r }
+describe(train_data$BsmtFullBath)
+### Data Having 2 missing Values, Replaced NA using median value
+train_data$BsmtFullBath[which(is.na(train_data$BsmtFullBath))]=median(train_data$BsmtFullBath,na.rm=TRUE)
+
+describe(train_data$BsmtHalfBath)
+### Data Having 2 missing Values, Replaced NA using median value
+train_data$BsmtHalfBath[which(is.na(train_data$BsmtHalfBath))]=median(train_data$BsmtHalfBath,na.rm=TRUE)
+```
+## FireplaceQu
+```{r }
+describe(train_data$FireplaceQu)
+### As per the Project discription NA values are replaced to "No Fireplace"
+train_data$FireplaceQu=as.character(train_data$FireplaceQu)
+train_data$FireplaceQu[which(is.na(train_data$FireplaceQu))]="NoFireplace"
+train_data$FireplaceQu=as.factor(train_data$FireplaceQu)
+describe(train_data$FireplaceQu)
+```
+## GarageYrBlt
+```{r }
+describe(train_data$GarageYrBlt)
+### Identified some Noise data in GarageYrBlt, We found year as 2207 and replaced to 2007
+### total 159 values are missing. the % of missing values is 0.06
+train_data$GarageYrBlt[which(train_data$GarageYrBlt==2207)]=2007
+describe(train_data$GarageYrBlt)
+```
+## GarageFinish, GarageQual, GarageCond, GarageType
+```{r }
+describe (train_data$GarageFinish)
+### As per the Project Discription NA values are replaced to No Grage
+train_data$GarageFinish=as.character(train_data$GarageFinish)
+train_data$GarageFinish[which(is.na(train_data$GarageFinish))]="NoGarage"
+train_data$GarageFinish=as.factor(train_data$GarageFinish)
+describe (train_data$GarageFinish)
+
+describe (train_data$GarageQual)
+### As per the Project Discription NA values are replaced to No Grage
+train_data$GarageQual=as.character(train_data$GarageQual)
+train_data$GarageQual[which(is.na(train_data$GarageQual))]="NoGarage"
+train_data$GarageQual=as.factor(train_data$GarageQual)
+describe (train_data$GarageQual)
+
+describe (train_data$GarageCond)
+### As per the Project Discription NA values are replaced to No Grage
+train_data$GarageCond=as.character(train_data$GarageCond)
+train_data$GarageCond[which(is.na(train_data$GarageCond))]="NoGarage"
+train_data$GarageCond=as.factor(train_data$GarageCond)
+describe (train_data$GarageCond)
+
+describe (train_data$GarageType)
+### As per the Project Discription NA values are replaced to No Grage
+train_data$GarageType=as.character(train_data$GarageType)
+train_data$GarageType[which(is.na(train_data$GarageType))]="NoGarage"
+train_data$GarageType=as.factor(train_data$GarageType)
+describe (train_data$GarageType)
+```
+## Functional, KitchenQual & GarageCars
+```{r }
+describe(train_data$Functional)
+#### Data Having 2 missing Values. Replaced with mode values
+train_data$Functional[which(is.na(train_data$Functional))]=Mode(train_data$Functional) #"Typ"
+describe(train_data$Functional)
+
+describe(train_data$KitchenQual)
+#### Data Having 1 missing Values. Replaced with Mode Values
+train_data$KitchenQual[which(is.na(train_data$KitchenQual))]=Mode(train_data$KitchenQual) # "TA"
+describe(train_data$KitchenQual)
+
+describe(train_data$GarageCars)
+### Data Having 1 Missing Values, replaced with Mode values
+train_data$GarageCars[which(is.na(train_data$GarageCars))]=Mode(train_data$GarageCars) # 2
+describe(train_data$GarageCars)
+```
+## GarageArea
+```{r }
+describe(train_data$GarageArea)
+### Data Having Missing Values,so we replaced with median values
+train_data$GarageArea[which(is.na(train_data$GarageArea))]=median(train_data$GrLivArea,na.rm=T)
+describe(train_data$GarageArea)
+```
+## PoolQC, MiscFeature & Fence
+```{r }
+
+colSums(sapply(train_data,is.na))
+
+describe(train_data$PoolQC)
+### As per the Project Discription NA values are replaced to No pool.
+train_data$PoolQC=as.character(train_data$PoolQC)
+train_data$PoolQC[which(is.na(train_data$PoolQC))]="NoPool"
+train_data$PoolQC=as.factor(train_data$PoolQC)
+describe(train_data$PoolQC)
+
+describe(train_data$MiscFeature)
+### As per the Project Discription NA values are replaced to None
+train_data$MiscFeature=as.character(train_data$MiscFeature)
+train_data$MiscFeature[which(is.na(train_data$MiscFeature))]="None"
+train_data$MiscFeature=as.factor(train_data$MiscFeature)
+describe(train_data$MiscFeature)
+
+describe(train_data$Fence)
+### As per the Project Discription NA values are replaced to NO Fance
+train_data$Fence=as.character(train_data$Fence)
+train_data$Fence[which(is.na(train_data$Fence))]="NoFence"
+train_data$Fence=as.factor(train_data$Fence)
+describe(train_data$Fence)
+```
+## SaleType
+```{r }
+describe(train_data$SaleType)
+#### Data Having only 1 missing values. replaced to mode
+train_data$SaleType[which(is.na(train_data$SaleType))]=Mode(train_data$SaleType) #"WD"
+is.factor(train_data$SaleType)
+describe(train_data$SaleType)
+```
+## LotFrontage and GarageYrblt is Major missing Values in data and can be replaced with bagImpute using Propress
+```{r }
+
+colSums(sapply(train_data,is.na))
+
+library(ipred)
+train_data_preprocess = preProcess(train_data[,c("LotFrontage","GarageYrBlt")],method="bagImpute")
+summary(train_data_preprocess) 
+train_data_pred= predict(train_data_preprocess,train_data[,c("LotFrontage","GarageYrBlt")],type="class")
+train_data$LotFrontage = train_data_pred$LotFrontage
+train_data$GarageYrBlt = train_data_pred$GarageYrBlt
+
+colSums(sapply(train_data,is.na))
+
+```
+## Creating dummy Variables
+```{r}
+feature_classes <- sapply(names(train_data),function(x){class(train_data[[x]])})
+categorical_feature <- names(feature_classes[feature_classes == "factor"])
+numb_feature <- names(feature_classes[feature_classes != "factor"])
+class(categorical_feature)
+class(train_data)
+
+# Use caret dummyVars function for hot one encoding for categorical features
+dummies <- dummyVars(~.,as.data.frame(train_data)[categorical_feature])
+categorical_1_hot <- predict(dummies,as.data.frame(train_data)[categorical_feature])
+train_data_dummies <- cbind(as.data.frame(train_data)[numb_feature],categorical_1_hot)
+dim(train_data_dummies)
+#categorical_1_hot[is.na(categorical_1_hot)] <- 0  #for any level that was NA, set to zero
+
+```
+## Split the clean data into test and train
+```{r}
+# Spilt to Train and Test Data
+cleanTrain <- sqldf("select * from train_data where id < 1461")
+cleanTest <- sqldf("select * from train_data where id > 1460")
+dim(cleanTrain)
+dim(cleanTest)
+#View(cleanTrain)
+
+# create data for training and test
+cleanTrainDummies <- train_data_dummies[1:nrow(train),]
+cleanTestDummaies <- train_data_dummies[(nrow(train)+1):nrow(train_data_dummies),]
+y <- train$SalePrice
+
+
+```
+## Start H2o Cluster and convert dataframe to H2o dataframe
+```{r}
+### To launch the H2O cluster, 
+localH2O <- h2o.init(nthreads = -1)
+
+```
+## Creating Helper Method for h2o model creation
+```{r  }
+runH2oPrediction <- function(trainData, testData, responseData, normalizedResponse, fileName ){
+  #trainData <- cleanTrain
+  #testData <- cleanTest
+  #responseData <- y
+  #normalizedResponse <- "Y"
+  
+  if(normalizedResponse == "Y"){
+    trainData$SalePrice <- log(responseData)
+  }else{
+    trainData$SalePrice <- responseData
+  }
+  #data to h2o cluster
+  train.h2o <- as.h2o(trainData)
+  test.h2o <- as.h2o(testData)
+  
+  #check column index number
+  colnames(train.h2o)
+  #dependent variable (Purchase)
+  y.dep <- c("SalePrice")
+ 
+  #independent variables (dropping ID variables)
+  x.indep <- setdiff(names(trainData),c("Id","SalePrice"))
+  
+  #deep learning model------------------------------------ 
+
+  dlearning.model <- h2o.deeplearning(y = y.dep,
+                                    x = x.indep,
+                                    training_frame = train.h2o,
+                                    epoch = 1500,
+                                    hidden = c(1500, 1500),
+                                    activation = "Rectifier",
+                                    l1=1e-5,
+                                    l2=1e-5,
+                                    seed = 1122)
+
+  # h2o.performance(dlearning.model)
+  #make predictions
+  predict.dl2 <- as.data.frame(h2o.predict(dlearning.model, test.h2o))
+  if(normalizedResponse == "Y"){
+    sub_dl <- data.frame(Id = test$Id, SalePrice  =  exp(predict.dl2$predict))
+  }else{
+    sub_dl <- data.frame(Id = test$Id, SalePrice  =  predict.dl2$predict)
+  }
+  write.csv(sub_dl, file = fileName, row.names = F)
+  
+  dlearning.model
+}
+```
+## H2o predictions
+```{r}
+## Model Fitting and predicting 2 Using H20 ALL variables
+dl.model <- runH2oPrediction(cleanTrain, cleanTest, y, "N", "C:/Users/A038246/Downloads/allFeaturesDL.csv")
+h2o.performance(dl.model)
+print("All Features DL Prediction")
+dl.model <- runH2oPrediction(
+  cleanTrainDummies, cleanTestDummaies, y, "N", "C:/Users/A038246/Downloads/allFeaturesWithDummiesDL.csv")
+h2o.performance(dl.model)
+print("All Features DL Prediction with dummy variable")
+```
+## Conclusion:
+The best score is obtained with h2o prediction with all attribues and following settting:
+- epoch - 1500
+- hidden layer - c(1500, 1500)
+- activation - Rectifier
+- Overfitting parameters, L1 = 1e-5 and L2 = 1e-5
+
+### Score: 0.11204
+### Kaggle RanK : 15th
+
+## Shutdown H2o
+```{r }
+h2o.shutdown()
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
