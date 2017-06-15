@@ -380,6 +380,5 @@ predict.dl2 <- as.data.frame(h2o.predict(dlearning.model, test.h2o))
 sub_dl <- data.frame(Id = test$Id, SalePrice  =  predict.dl2$predict)
 write.csv(sub_dl, file = "/Users/ritesh/Downloads/dl_submission7.csv", row.names = F)
 
-
 h2o.shutdown(prompt = TRUE)
 #----------------------------------------------------------------
