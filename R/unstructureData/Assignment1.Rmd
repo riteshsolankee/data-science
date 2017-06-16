@@ -13,15 +13,12 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-## Problem Statement:
-Scrape tweets for the hashtag #datascience and do the following
-a. Hour wise or minute wise (depending upon the scrapped tweets) number of tweets -
-   draw a line chart
-b. Top ten users with more number of tweets
-c. Create a new column in the data itself, to identity total number of hashtags in each
-   tweet
-d. Identity those users who have used #datascience as well as #machinelearning. Plot a bar
-   chart top 10 users based on their count
+## Problem Statement - 1:
+Scrape tweets for the hashtag #datascience and do the following<br></br>
+- Hour wise or minute wise (depending upon the scrapped tweets) number of tweets - draw a line chart<br></br>
+- Top ten users with more number of tweets<br></br>
+- Create a new column in the data itself, to identity total number of hashtags in each tweet<br></br>
+- Identity those users who have used #datascience as well as #machinelearning. Plot a bar chart top 10 users based on their count<br></br>
 
 ## Deleting all variables
 ```{r clear workspace}
@@ -41,70 +38,92 @@ library(ROAuth)
 library(httr)
 library(base64enc)
 library(httk)
+library(RCurl)
 ```
 ## Twitter API code
 
 ```{r}
-
-api_key <- "MJV2Ue0841ZvZcTjlj2ljPbCM"
-api_secret <- "4UJ38gECMGyK6wtmlpd4vxZgb5bWm30SMipJ15D1vFNKToVdwK"
-token <- "147624175-zLAkL4BeyLYo7Il4dpwPg2x7C5WvvGBLOnlW6SWM"
-token_secret <- "1An3nzmzWGxwhjcTXAqmTJhHuBvr8dO74FNEtK9pJABVX"
-
-# Sys.setenv(http_proxy="http://A038246:!June1234@proxy-mdha.target.com:8080")
-# Sys.setenv(https_proxy="http://A038246:!June1234@proxy-mdha.target.com:8080")
-# Sys.setenv(HTTP_PROXY="http://A038246:!June1234@proxy-mdha.target.com:8080")
-# Sys.setenv(HTTP_PROXY="http://A038246:!June1234@proxy-mdha.target.com:8080")
-
-# setup_twitter_oauth(
-#   consumer_key = api_key,
-#   consumer_secret = api_secret,
-#   access_token = token,
-#   access_secret = token_secret)
+serchHashtagTwitter <- function(hashtag) {
+  api_key <- "MJV2Ue0841ZvZcTjlj2ljPbCM"
+  api_secret <- "4UJ38gECMGyK6wtmlpd4vxZgb5bWm30SMipJ15D1vFNKToVdwK"
+  token <- "147624175-zLAkL4BeyLYo7Il4dpwPg2x7C5WvvGBLOnlW6SWM"
+  token_secret <- "1An3nzmzWGxwhjcTXAqmTJhHuBvr8dO74FNEtK9pJABVX"
+  
+  #Sys.setenv(http_proxy="http://A038246:!June1234@proxy-mdha.target.com:8080")
+  #Sys.setenv(https_proxy="http://A038246:!June1234@proxy-mdha.target.com:8080")
+  #Sys.setenv(HTTP_PROXY="http://A038246:!June1234@proxy-mdha.target.com:8080")
+  #Sys.setenv(HTTP_PROXY="http://A038246:!June1234@proxy-mdha.target.com:8080")
+  
+  httr::set_config( config( ssl_verifypeer = 0L ) )
+  
+  setup_twitter_oauth(
+    consumer_key = api_key,
+    consumer_secret = api_secret,
+    access_token = token,
+    access_secret = token_secret)
+  
+  # data.science.tweet <- searchTwitter("#datascience", 5000)
+  data.science.tweet <- searchTwitter(hashtag, 5000)
+  ## Convert the tweets to Dataframe
+  #df.data.science.tweet <- twListToDF(data.science.tweet)
+  twListToDF(data.science.tweet)
+}
 ```
-## Scraping tweets with the hashtag #datascience. 
-Since, could not find any tweets for 'datascience', therefore scraped the related hashtag like, 'bigdata', 'data' and 'iot'.
-Joined the data frames all these tweets and come up with final tweets DF
+## Code to read the tweets from CSV file which were downloaded from Twitter API and saved as csv
 ```{r}
-nihDS.tweet <- userTimeline('@NIHDataScience', 3200)
-berkelleyData.tweet <- userTimeline('@BerkeleyData', 3200)
-kdNuggets.tweet <- userTimeline('@kdnuggets', 3200)
+readCSVFile <- function(file_Path){
+  df <- read.csv(
+    file_Path,
+    stringsAsFactors = F)
+  #View(df)
+  df$created <-  strptime(df$created,format="%m/%d/%Y %H:%M", tz="GMT")
+  df$created <- as.POSIXct(df$created)
+  df
+}
+```
 
-df.nihDS.tweet <- twListToDF(nihDS.tweet)
-df.berkelleyData.tweet <- twListToDF(berkelleyData.tweet)
-df.kdNuggets.tweet <- twListToDF(kdNuggets.tweet)
+## Scraping tweets with the hashtag #datascience. 
+Using 'searchTwitter' to get the twitter for #datascience
+```{r}
+## Search the tweets with hashtag '#datascience'
+df.data.science.tweet <- serchHashtagTwitter("#datascience")
 
+## Read twritter fron CSV file
+# df.data.science.tweet <- readCSVFile("/Users/ritesh/pad-datascience/R/unstructureData/data/combinedDSNew.csv")
 
-df.data.science.tweet <- rbind(df.nihDS.tweet, df.berkelleyData.tweet)
-df.data.science.tweet <- rbind(df.data.science.tweet, df.kdNuggets.tweet)
-
-head(df.data.science.tweet)
-View(df.data.science.tweet)
+#head(df.data.science.tweet)
+#View(df.data.science.tweet)
 dim(df.data.science.tweet)
-write.csv(df.data.science.tweet, file = "/Users/ritesh/pad-datascience/R/unstructureData/data/combinedDS1.csv")
+# write.csv(df.data.science.tweet, file = "/Users/ritesh/pad-datascience/R/unstructureData/data/datascience_tweet.csv")
 
 ```
-## Part - 1
+## Part - A
 Hour wise or minute wise (depending upon the scrapped tweets) number of tweets - draw a line chart
 ```{r}
+## Convert the text column to character
 df.data.science.tweet$text <- as.character(df.data.science.tweet$text)
+## removed the spacial character excluding '_' and '#'
 df.data.science.tweet$text_transformed <- gsub("[^A-Za-z0-9///'/#/_ ]", " ", df.data.science.tweet$text)
+## convert the the transformed text column to lower case
 df.data.science.tweet$text_transformed <- lapply(df.data.science.tweet$text_transformed, tolower)
 
 ## Parse the date field 'created'
 names(df.data.science.tweet)
 class(df.data.science.tweet$created)
 
-df.data.science.tweet$cnvdateWithHour <- format(df.data.science.tweet$created, "%d/%m/%y %H") 
+## Create a new date column which include date, hour and minute to plot the minute wise tweet count 
+df.data.science.tweet$cnvdate <- format(df.data.science.tweet$created, "%d/%m/%y %H:%M") 
 
-tweets_hours <- df.data.science.tweet %>% group_by(cnvdateWithHour) %>% summarise(count=n())
-top_100 <- head(tweets_hours, 100)
+class(df.data.science.tweet$cnvdate)
 
+View(df.data.science.tweet)
 
-#View(tweets_hours)
+## calculate the minute wise tweetcount
+tweets_minutes <- df.data.science.tweet %>% group_by(cnvdate) %>% summarise(count=n())
+tweets_minutes_subset <- head(tweets_minutes, 40)
 
 hourlyPlot <-
-  ggplot(data=top_100, aes(x=cnvdateWithHour, y=count, group=1)) +
+  ggplot(data=tweets_minutes_subset, aes(x=cnvdate, y=count, group=1)) +
   geom_line() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   ggtitle("Tweets Count Vs Day", subtitle="Hour Wise Tweet Count") + 
@@ -113,15 +132,25 @@ hourlyPlot <-
 ggplotly(hourlyPlot)
 
 ```
-## Part - 2
+
+## Part - B
 Top ten users with more number of tweets
 ```{r}
-length(df.data.science.tweet$id)
-length(unique(df.data.science.tweet$id))
+length(df.data.science.tweet$screenName)
+length(unique(df.data.science.tweet$screenName))
+
+## Group the data based on user and calculate the count for uses tweets
+tweets_user <- df.data.science.tweet %>% group_by(screenName) %>% summarise(count=n())
+tweets_user <- tweets_user %>% arrange(-count)
+class(tweets_user)
+#View(tweets_user)
+top_10 <- head(tweets_user, 10)
+top_10
 ```
-## Part - 3
+## Part - C
 Create a new column in the data itself, to identity total number of hashtags in each tweet
 ```{r}
+## Helper function for searching a pattern from a string
 strcount <- function(x, pattern, split){
   unlist(lapply(
     strsplit(x, split),
@@ -129,21 +158,15 @@ strcount <- function(x, pattern, split){
    ))
 }
 
+## Create new column 'hashTagCount' containg the count of hastags corresponding to each tweet
 df.data.science.tweet$hashTagCount <- 
   lapply(df.data.science.tweet$text_transformed, FUN = function(x2) strcount(x2, "#.*", " "))
 
-# unique(df.data.science.tweet$hashTagCount)
-
+ unique(df.data.science.tweet$hashTagCount)
 ```
-## Part 4 
+## Part - D
 Identity those users who have used #datascience as well as #machinelearning. Plot a bar chart top 10 users based on their count
 ```{r}
-
-# df.data.science.tweet$dsMlHashTagCount <- 
-#   lapply(
-#     df.data.science.tweet$text_transformed, 
-#     FUN = function(x2) strcount(x2, "#datascience*.#machinelearning|#machinelearning*.#datascience", " "))
-
 df.data.science.tweet$mlHashTagCount <- 
   lapply(
     df.data.science.tweet$text_transformed,
@@ -154,8 +177,6 @@ df.data.science.tweet$dsHashTagCount <-
     df.data.science.tweet$text_transformed,
     FUN = function(x2) strcount(x2, "#datascience", " "))
 
-#unique(df.data.science.tweet$MlHashTagCount)
-
 df.data.science.tweet$dsHashTagCount <- as.numeric(df.data.science.tweet$dsHashTagCount)
 df.data.science.tweet$mlHashTagCount <- as.numeric(df.data.science.tweet$mlHashTagCount)
 
@@ -163,19 +184,70 @@ df.data.science.tweet <-
   transform(
     df.data.science.tweet, 
     DsMlHashTagCount = ifelse(
-      (df.data.science.tweet$dsHashTagCount > 0 & df.data.science.tweet$mlHashTagCount > 0), 
-      df.data.science.tweet$dsHashTagCount + df.data.science.tweet$mlHashTagCount, 0))
+      (df.data.science.tweet$dsHashTagCount > 0 & df.data.science.tweet$mlHashTagCount > 0), 1, 0))
 
+unique(df.data.science.tweet$DsMlHashTagCount)
 
+tweets_user_ds_ml <- 
+  df.data.science.tweet %>% 
+  group_by(screenName) %>% 
+  summarise(totalCount = sum(DsMlHashTagCount, na.rm = T))
+tweets_user_ds_ml <- tweets_user_ds_ml %>% arrange(-totalCount)
+
+top_10_users <- head(tweets_user_ds_ml, 10)
+
+## Bar plot of top 10 users have used '#datascience' and '#machinelearning'  
+bar_chart_tweet_count <- 
+  ggplot(top_10_users, aes(x = reorder(screenName,-totalCount), y = totalCount)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Users Vs Tweet Count", subtitle="Users Vs Tweet Count") + 
+  xlab("\nMonth - Year") + 
+  ylab("\nTweet Count")
+ggplotly(bar_chart_tweet_count)
 
 ```
 
-## Including Plots
+## Problem Statement - 2:
+Scrape tweets from @narendramodi and do the following<br></br>
+- Create a word cloud using the hashtags used in his tweets. (If you are not able to scrape more tweets, please use the data set which was shared already)<br></br>
+- For each quarter identify top 5 hashtags based on frequency. Represent them using bar charts (Tip: use facets)<br></br>
 
-You can also embed plots, for example:
+## Read the tweets and create a dataframe
+```{r}
+modi.tweets <- 
+  read.csv(
+    "/Users/ritesh/pad-datascience/R/unstructureData/data/narendramodi_tweets.csv",
+    stringsAsFactors = F)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+## Convert the text column to character
+modi.tweets$text <- as.character(modi.tweets$text)
+## removed the spacial character excluding '_' and '#'
+modi.tweets$text_transformed <- gsub("[^A-Za-z0-9///'/#/_ ]", " ", modi.tweets$text)
+View(modi.tweets)
+
+words_list <- str_split(modi.tweets$text_transformed, " ")
+words <- unlist(words_list)
+freq_words <- data.frame(table(words))
+df.hashtag_words <- freq_words[grepl('^#', as.character(freq_words$words)), ]
+df.hashtag_words <- df.hashtag_words %>% arrange(-Freq)
+
+top_20 <- df.hashtag_words
+
+#View(df.hashtag_words)
+
+## Basic word cloud
+wordcloud(
+  top_20$words,
+  top_20$Freq,  
+  scale=c(4,.5), 
+  random.order = T, 
+  random.color = T,
+  rot.per=.2,
+  vfont=c("sans serif","plain"),
+  colors=palette())
+
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
