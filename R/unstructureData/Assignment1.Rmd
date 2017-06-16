@@ -14,13 +14,13 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ## Problem Statement:
-Scrape tweets for the hashtag #datascience and do the following
-a. Hour wise or minute wise (depending upon the scrapped tweets) number of tweets -
+# Scrape tweets for the hashtag #datascience and do the following
+#a. Hour wise or minute wise (depending upon the scrapped tweets) number of tweets -
    draw a line chart
-b. Top ten users with more number of tweets
-c. Create a new column in the data itself, to identity total number of hashtags in each
+#b. Top ten users with more number of tweets
+#c. Create a new column in the data itself, to identity total number of hashtags in each
    tweet
-d. Identity those users who have used #datascience as well as #machinelearning. Plot a bar
+#d. Identity those users who have used #datascience as well as #machinelearning. Plot a bar
    chart top 10 users based on their count
 
 ## Deleting all variables
