@@ -39,6 +39,7 @@ library(httr)
 library(base64enc)
 library(httk)
 library(RCurl)
+library(zoo)
 ```
 ## Twitter API code
 
@@ -225,8 +226,12 @@ modi.tweets <-
 modi.tweets$text <- as.character(modi.tweets$text)
 ## removed the spacial character excluding '_' and '#'
 modi.tweets$text_transformed <- gsub("[^A-Za-z0-9///'/#/_ ]", " ", modi.tweets$text)
-View(modi.tweets)
+# View(modi.tweets)
+```
 
+## Part - A
+Create a word cloud using the hashtags used in his tweets. (If you are not able to scrape more tweets, please use the data set which was shared already)
+```{r }
 words_list <- str_split(modi.tweets$text_transformed, " ")
 words <- unlist(words_list)
 freq_words <- data.frame(table(words))
@@ -234,8 +239,6 @@ df.hashtag_words <- freq_words[grepl('^#', as.character(freq_words$words)), ]
 df.hashtag_words <- df.hashtag_words %>% arrange(-Freq)
 
 top_20 <- df.hashtag_words
-
-#View(df.hashtag_words)
 
 ## Basic word cloud
 wordcloud(
@@ -249,5 +252,50 @@ wordcloud(
   colors=palette())
 
 ```
+
+## Part - B
+For each quarter identify top 5 hashtags based on frequency. Represent them using bar charts (Tip: use facets)
+```{r}
+# View(modi.tweets)
+modi.tweets$qtr <- as.yearqtr(modi.tweets$created_at, format = "%Y-%m-%d")
+unique(modi.tweets$qtr)
+
+modi.tweets$words_list <- str_split(modi.tweets$text_transformed, " ")
+# View(modi.tweets)
+quarterly.GrpWord.List <- modi.tweets %>% 
+  group_by(qtr) %>%
+  summarise(words = list(words_list))
+
+#View(quarterly.GrpWord.List)
+
+quarterly.GrpWord.List$words <- 
+  lapply(lapply(quarterly.GrpWord.List$words, unlist), FUN = function(x2) x2[grepl('^#', as.character(x2))])
+
+class(quarterly.GrpWord.List$qtr)
+quarterly.GrpWord.List$qtr <- as.character(quarterly.GrpWord.List$qtr)
+grp.df.matrix <- 
+  mapply(
+    FUN = function (x,y) {df <- data.frame(table(x)); df$qtr <- y; df}, 
+    quarterly.GrpWord.List$words, quarterly.GrpWord.List$qtr)
+
+grp.df.list <- lapply(
+  apply(grp.df.matrix,2, data.frame), 
+  FUN = function(dflistElement) {df <- dflistElement %>% arrange(-Freq); head(df,5)})
+
+top5.grp.df <- do.call("rbind", grp.df.list)
+# View(top5.grp.df)
+
+bar_chart_qtr_tweet_count <- 
+  ggplot(top5.grp.df, aes(x = reorder(x,-Freq), y = Freq)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Quarterly Top 5 Hashtag Count", subtitle="Users Vs Tweet Count") + 
+  xlab("\n Hashtag") + 
+  ylab("\n Hashtag Count") +
+  facet_grid(~qtr)
+ggplotly(bar_chart_qtr_tweet_count)
+```
+
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
