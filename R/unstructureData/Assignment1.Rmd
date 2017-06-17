@@ -72,12 +72,12 @@ serchHashtagTwitter <- function(hashtag) {
 ```
 ## Code to read the tweets from CSV file which were downloaded from Twitter API and saved as csv
 ```{r}
-readCSVFile <- function(file_Path){
+readCSVFile <- function(tweetfile.Path){
   df <- read.csv(
-    file_Path,
+    tweetfile.Path,
     stringsAsFactors = F)
   #View(df)
-  df$created <-  strptime(df$created,format="%m/%d/%Y %H:%M", tz="GMT")
+  df$created <-  strptime(df$created,format="%Y-%m-%d %H:%M:%S", tz="GMT")
   df$created <- as.POSIXct(df$created)
   df
 }
@@ -87,10 +87,10 @@ readCSVFile <- function(file_Path){
 Using 'searchTwitter' to get the twitter for #datascience
 ```{r}
 ## Search the tweets with hashtag '#datascience'
-df.data.science.tweet <- serchHashtagTwitter("#datascience")
+# df.data.science.tweet <- serchHashtagTwitter("#datascience")
 
 ## Read twritter fron CSV file
-# df.data.science.tweet <- readCSVFile("/Users/ritesh/pad-datascience/R/unstructureData/data/combinedDSNew.csv")
+df.data.science.tweet <- readCSVFile("/Users/ritesh/pad-datascience/R/unstructureData/data/datascience_tweet.csv")
 
 #head(df.data.science.tweet)
 #View(df.data.science.tweet)
@@ -161,7 +161,7 @@ strcount <- function(x, pattern, split){
 
 ## Create new column 'hashTagCount' containg the count of hastags corresponding to each tweet
 df.data.science.tweet$hashTagCount <- 
-  lapply(df.data.science.tweet$text_transformed, FUN = function(x2) strcount(x2, "#.*", " "))
+  lapply(df.data.science.tweet$text_transformed, FUN = function(x2) strcount(x2, "#\\S+", " "))
 
  unique(df.data.science.tweet$hashTagCount)
 ```
@@ -235,7 +235,7 @@ Create a word cloud using the hashtags used in his tweets. (If you are not able 
 words_list <- str_split(modi.tweets$text_transformed, " ")
 words <- unlist(words_list)
 freq_words <- data.frame(table(words))
-df.hashtag_words <- freq_words[grepl('^#', as.character(freq_words$words)), ]
+df.hashtag_words <- freq_words[grepl('#\\S+', as.character(freq_words$words)), ]
 df.hashtag_words <- df.hashtag_words %>% arrange(-Freq)
 
 top_20 <- df.hashtag_words
@@ -266,10 +266,10 @@ quarterly.GrpWord.List <- modi.tweets %>%
   group_by(qtr) %>%
   summarise(words = list(words_list))
 
-#View(quarterly.GrpWord.List)
+View(quarterly.GrpWord.List)
 
 quarterly.GrpWord.List$words <- 
-  lapply(lapply(quarterly.GrpWord.List$words, unlist), FUN = function(x2) x2[grepl('^#', as.character(x2))])
+  lapply(lapply(quarterly.GrpWord.List$words, unlist), FUN = function(x2) x2[grepl('#\\S+', as.character(x2))])
 
 class(quarterly.GrpWord.List$qtr)
 quarterly.GrpWord.List$qtr <- as.character(quarterly.GrpWord.List$qtr)
@@ -295,6 +295,7 @@ bar_chart_qtr_tweet_count <-
   ylab("\n Hashtag Count") +
   facet_grid(~qtr)
 ggplotly(bar_chart_qtr_tweet_count)
+plot(bar_chart_qtr_tweet_count)
 ```
 
 

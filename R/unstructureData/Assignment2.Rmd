@@ -1,0 +1,190 @@
+---
+title: "Unstructure Data Analysis - Assignment-2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Problem Statement - 1:
+1. Using the tweets for narendra modi, draw a scatter plot using all the tweets (filter the data only for the month of November 2016)<br></br>
+  a. X axis will be number of favorites<br></br>
+  b. Y axis will be retweets<br></br>
+  c. Size of the bubble will be the number of letters in each tweet<br></br>
+  d. Color of the bubble will be based on the device used<br></br>
+
+## Deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+## Install and load libraries
+```{r}
+library(tm)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(wordcloud)
+library(ggplot2)
+library(plotly)
+library(SnowballC) ## Snowball stemmers based on the C libstemmer UTF-8 library
+library(corrplot)
+```
+
+## Read the tweets and create a dataframe
+```{r}
+modi.tweets <- 
+  read.csv(
+    "/Users/ritesh/pad-datascience/R/unstructureData/data/narendramodi_tweets.csv",
+    stringsAsFactors = F)
+
+## Convert the text column to character
+modi.tweets$text <- as.character(modi.tweets$text)
+## removed the spacial character excluding '_' and '#'
+modi.tweets$text_transformed <- gsub("[^A-Za-z0-9///' ]", " ", modi.tweets$text)
+
+## Count the character of the tweets and add as a column 'character_count'
+modi.tweets$character_count <- lapply(modi.tweets$text_transformed, nchar)
+modi.tweets$character_count <- as.numeric(modi.tweets$character_count)
+## Convert the created_at column from character array to date
+modi.tweets$created_at <- as.Date(modi.tweets$created_at)
+## Subset only nov'16 tweets
+modi.tweets.subset <- subset(modi.tweets, as.Date("2016-10-31") < created_at & as.Date("2016-12-01") > created_at)
+#View(modi.tweets.subset)
+names(modi.tweets)
+class(modi.tweets$created_at)
+```
+## Draw Scatter Plot
+```{r}
+modi.tweets.plot <- 
+  ggplot(
+    modi.tweets.subset, 
+    aes(x = favorite_count, y = retweets_count, size = character_count, fill = source)) + 
+  geom_point(shape = 21) +
+  ggtitle("Narendra Modi Tweets for the month of Nov") +
+  labs(x = "Favourite Tweet Count", y = "Re-tweets Connt") +
+  theme(legend.position = "bottom", legend.direction = "horizontal")
+
+plot(modi.tweets.plot)
+ggplotly(modi.tweets.plot)
+```
+## Problem Statement - 2
+Use text mining package to create a word cloud for modi's tweet. While applying mapping, use SnowballC package to apply stemming
+```{r}
+tweet_corpus = Corpus(VectorSource(modi.tweets$text_transformed))
+
+## details are displayed with inspect()
+inspect(tweet_corpus[[997]])
+meta(tweet_corpus[[997]])
+## A character representation of a document is available via as.character() which is also used when inspecting a document:
+lapply(tweet_corpus[1:2], as.character)
+
+############### - Transformations - #############
+## Once we have a corpus we typically want to modify the documents in it, e.g., stemming, stopword removal, et cetera.
+## Transformations are done via the tm_map() function which applies (maps) a function to all elements of the corpus.
+## Convert corpus to lower case
+tweet_corpus = tm_map(tweet_corpus, content_transformer(tolower))
+
+## Remove Punctuation
+tweet_corpus = tm_map(tweet_corpus, removePunctuation)
+
+## Convert to Plain Text Format
+tweet_corpus = tm_map(tweet_corpus, PlainTextDocument)
+
+## To resolve the error 'simple_triplet_matrix 'i, j, v' different lengths'
+tweet_corpus <- Corpus(VectorSource(tweet_corpus))
+
+## Remove Stopwords
+tweet_corpus = tm_map(tweet_corpus, removeWords, stopwords('english'))
+
+## we will perform stemming. This means that all the words are converted 
+## to their stem (Ex: learning -> learn, walked -> walk, etc.). This will 
+## ensure that different forms of the word are converted to the same form 
+## and plotted only once in the wordcloud.
+tweet_corpus = tm_map(tweet_corpus, stemDocument)
+
+## If you want to remove the words ‘the’ and ‘this’, you can include them 
+## in the removeWords function as follows:
+tweet_corpus <- tm_map(tweet_corpus, removeWords, c('the', 'this','https', 'http','amp', stopwords('english')))
+
+## scale: This is used to indicate the range of sizes of the words.
+## max.words and min.freq:  These parameters are used to limit the number of words plotted. 
+##                          - max.words will plot the specified number of words and discard 
+##                            least frequent terms, whereas, 
+##                          - min.freq will discard all terms 
+##                            whose frequency is below the specified value.
+## random.order:  By setting this to FALSE, we make it so that the words with the highest 
+##                frequency are plotted first. If we don’t set this, it will plot the words 
+##                in a random order, and the highest frequency words may not necessarily appear in the center.
+## rot.per: This value determines the fraction of words that are plotted vertically.
+## colors:  The default value is black. If you want to use different colors based on 
+##          frequency, you can specify a vector of colors, or use one of the pre-defined color palettes. 
+
+
+## Create Word Cloud
+wordcloud(tweet_corpus, max.words = 200, random.order = F, colors=palette(rainbow(6)))
+```
+
+## Problem Statement - 3 
+<br>Check the association between the top 10 hashtags.</br>
+<br>  a. Use corrplot to show the correlations</br>
+<br>  b. Using any other package, draw the correlation along with dendograms</br>
+
+## Find top 10 hashtags
+```{r}
+## removed the spacial character excluding '_' and '#'
+modi.tweets$text_transformed <- gsub("[^A-Za-z0-9///'/_/# ]", " ", modi.tweets$text)
+tweet_corpus = Corpus(VectorSource(modi.tweets$text_transformed))
+tweet_corpus = tm_map(tweet_corpus, content_transformer(tolower))
+
+# Custom function to keep only the terms in "pattern" and remove everything else
+custom_content_transformer <- 
+  content_transformer(
+    function(x, pattern) regmatches(x, gregexpr(pattern, x, perl=TRUE, ignore.case=TRUE)))
+
+# The pattern we'll search for
+keep = "#\\S+"
+hashtag_tweet_corpus <- tm_map(tweet_corpus, custom_content_transformer, keep)
+
+# lapply(hashtag_tweet_corpus[1:5000], as.character)
+
+hashtag.tdm <- TermDocumentMatrix(hashtag_tweet_corpus)
+hashtags.tdm.df <- data.frame(as.matrix(hashtag.tdm))
+
+hashtag.dtm <- DocumentTermMatrix(hashtag_tweet_corpus)
+hashtags.dtm.df <- data.frame(as.matrix(hashtag.dtm))
+
+View(hashtags.tdm.df)
+View(hashtags.dtm.df)
+```
+## Part - A
+Use corrplot to show the correlations
+```{r}
+## Filter out first top 50 words (most frequently )
+top10.df <- data.frame(rowSums(as.matrix(hashtag.tdm)))
+names(top10.df) <- 'count'
+top10.df$hashtags <- rownames(top10.df)
+
+top10.df <- top10.df %>% arrange(-count)
+top10.df <- head(top10.df,10)
+top.hashtags <- top10.df$hashtags
+top.hashtags
+
+hashtags.tdm.df.10 <- hashtags.dtm.df[, top.hashtags]
+hashtags.tdm.df.10
+
+cor_hashtags <- cor(hashtags.tdm.df.10)
+corrplot(cor_hashtags,method="color" )
+```
+## Part - B
+Using any other package, draw the correlation along with dendrograms
+```{r}
+corrplot(cor_hashtags,method="color" )
+```
+
