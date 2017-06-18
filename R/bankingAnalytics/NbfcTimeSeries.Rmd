@@ -1,0 +1,74 @@
+---
+title: "NBFC Time Series"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#tsDataNBFC
+
+## Deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+
+```{r load}
+library(readxl)
+library(VIM)
+library(ggplot2)
+library(reshape)
+library(lubridate)
+library(dplyr)
+library(forecast)
+```
+## Set the working directory & Load data and intial analysis
+```{r}
+setwd("/Users/ritesh/pad-datascience/R/")
+
+### Load data and intial analysis
+tsRate <- read.csv("bankingAnalytics/data/tsDataNBFC.csv")
+dim(tsRate)
+head(tsRate)
+summary(tsRate)
+
+# ratio.matrix <- as.matrix(ratio)
+
+```
+## Data Exploration 
+```{r}
+nrow(tsRate[!complete.cases(tsRate),])
+tsRate$Date <- as.Date(parse_date_time(tsRate$Date,"dmy"))
+range(tsRate$Date)
+
+train <- filter(tsRate, Date <= "2015-12-01")
+
+View(train)
+
+## Convert to ts data
+trainTS <- ts(train[,2], start = c(2005,1), end = c(2014, 12), frequency = 12)
+plot(trainTS)
+frequency(trainTS)
+test <- filter(tsRate, Date > "2014-12-01")
+testTS <- ts(test[,2], start = c(2015 ,1), end = c(2016,1), frequency = 12)
+plot(testTS)
+
+autoplot(forecast(trainTS, level = c(50, 80,95)))
+```
+## Forcasting
+```{r}
+plot(decompose(trainTS))
+ets.fit <- ets(trainTS)
+checkresiduals(ets.fit)
+
+ets.yhar <- forecast(ets.fit, h =3)
+plot(ets.yhar)
+forecast(ets.fit, 3)
+```
+

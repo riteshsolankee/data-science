@@ -1,0 +1,113 @@
+---
+title: "Investment Banking Case Study"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+
+```{r load}
+library(readxl)
+library(VIM)
+library(ggplot2)
+library(reshape)
+```
+
+## Set the working directory & Load data and intial analysis
+```{r}
+setwd("/Users/ritesh/pad-datascience/R/")
+
+### Load data and intial analysis
+ratio <- read.csv("bankingAnalytics/data/ratio.csv")
+dim(ratio)
+head(ratio)
+summary(ratio)
+
+ratio.matrix <- as.matrix(ratio)
+
+```
+## Data Exploration
+```{r}
+rowSums(is.na(ratio))
+
+xx <- ratio[rowSums(is.na(ratio)) < 29, ]
+rowSums(is.na(data.frame(xx)))
+dim(xx)
+summary(xx)
+
+aggr(xx, prop =F , numbers = T )
+aggr(xx, prop =T , numbers = T )
+
+yy <- xx[, colSums(is.na(xx)) < 13]
+
+dim(yy)
+aggr(yy, prop =F , numbers = T )
+aggr(yy, prop =T , numbers = T )
+
+plot(density(yy$Sum.of.Market.Cap..in.US...))
+sd <- sd(yy$Sum.of.Market.Cap..in.US...)
+m <- mean(yy$Sum.of.Market.Cap..in.US...)
+
+val <- m + 3*sd
+val
+
+yy <- yy[which(yy$Sum.of.Market.Cap..in.US... < val), ]
+dim(yy)
+tmp_yy <- yy
+yy[is.na(yy)] <- 0
+
+aggr(yy, prop =F , numbers = T )
+
+yy <- yy[3:ncol(yy)]
+View(yy)
+dim(yy)
+```
+## Multivarite regression
+```{r}
+cor(yy,method="pearson")
+
+library(Hmisc)
+correlations <- rcorr(as.matrix(yy))
+
+correlations$P
+
+```
+
+```{r}
+mosthighlycorrelated <- function(mydataframe,numtoreport, output)
+  {
+     # find the correlations
+     cormatrix <- cor(mydataframe)
+     # set the correlations on the diagonal or lower triangle to zero,
+     # so they will not be reported as the highest ones:
+     diag(cormatrix) <- 0
+     cormatrix[lower.tri(cormatrix)] <- 0
+     # flatten the matrix into a dataframe for easy sorting
+     fm <- as.data.frame(as.table(cormatrix))
+     # assign human-friendly names
+     names(fm) <- c("First.Variable", "Second.Variable","Correlation")
+     # sort and print the top n correlations
+     
+     df <- fm[order(abs(fm$Correlation),decreasing=T),]
+     df$Correlation <- abs(df$Correlation)
+     # df <- df [df$Second.Variable == "Sum.of.Market.Cap..in.US...", ]
+     # head(fm[order(abs(fm$Correlation),decreasing=T),],n=numtoreport)
+     df
+}
+
+attr <- mosthighlycorrelated(yy, 10, "Sum.of.Market.Cap..in.US...")
+View(attr)
+```
+

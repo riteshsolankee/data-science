@@ -1,0 +1,138 @@
+---
+title: "Probability Case Study"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Load libraries
+```{r}
+library(ggplot2)
+library(LaplacesDemon)
+```
+
+```{r}
+setwd("/Users/ritesh/pad-datascience/R/")
+
+credit.card <- 
+  read.csv(
+    "bankingAnalytics/data/cobrand credit card .csv", 
+    sep =",", 
+    header = TRUE, 
+    stringsAsFactors = FALSE)
+
+dim(credit.card)
+names(credit.card)
+summary(credit.card)
+str(credit.card)
+
+head(credit.card)
+```
+
+## Exploratory Data Analysis
+```{r}
+# missing values
+nrow(credit.card[!complete.cases(credit.card),])
+credit.card[!complete.cases(credit.card),]
+
+#outliers
+
+boxplot(credit.card$Spends)
+boxplot(credit.card$Spends.band)
+boxplot(credit.card$Fraud)
+
+library(ggplot2)
+
+d<-credit.card
+str(d)
+
+d$Spends.band<- as.factor(d$Spends.band)
+d$Spends<- as.factor(d$Spends)
+d$Fraud<- as.factor(d$Fraud)
+d$Type.of.swipe<- as.factor(d$Type.of.swipe)
+
+# ggplot(d,aes(x=Spends.band,y=Spends))+ geom_boxplot()
+
+
+```
+## Analysis
+```{r}
+mytable1<- table(credit.card$Fraud)
+
+prop.table(mytable1)
+
+mytable<- table(credit.card$Spends.band)
+
+prop.table(mytable)
+
+PrA<-c(.242,.758)
+PrA2<-c(.174,.827)
+PrA3<-c(0.585,.415)
+card1<- credit.card[which(credit.card$Spends.band==1),]
+dim(card1)
+
+mytable3<- table(card1$Fraud)
+prop.table(mytable3)
+
+PrBA<- c(0.0032,.9968)
+
+
+data1<- BayesTheorem(PrA,PrBA)
+
+str(data1)
+
+data1
+
+#spend band 1  faud 0.001
+#over all 0.001
+
+card2<- credit.card[which(credit.card$Spends.band==2),]
+dim(card2)
+
+mytable4<- table(card2$Fraud)
+prop.table(mytable4)
+
+PrBA1<- c(0.0002,.9998)
+
+
+data2<- BayesTheorem(PrA2,PrBA1)
+
+str(data2)
+
+data2
+
+
+card3<- credit.card[which(credit.card$Spends.band==3),]
+dim(card3)
+
+mytable3<- table(card2$Fraud)
+prop.table(mytable3)
+
+PrBA2<- c(0.0002,.9998)
+
+
+data3<- BayesTheorem(PrA3,PrBA2)
+
+str(data3)
+
+data3
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
