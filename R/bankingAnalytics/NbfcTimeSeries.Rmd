@@ -70,5 +70,17 @@ checkresiduals(ets.fit)
 ets.yhar <- forecast(ets.fit, h =3)
 plot(ets.yhar)
 forecast(ets.fit, 3)
+accuracy(ets.yhar, testTS)
+
+accuracy(ets.yhar, testTS)[2, "RMSE"]
+```
+## ARIMA modeling
+```{r}
+a.fit <- auto.arima(trainTS)
+
+a.fit
+tsdisplay(residuals(a.fit))
+
+plot(forecast(a.fit), ylab="Rates", xlab="Year")
 ```
 
