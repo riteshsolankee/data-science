@@ -20,12 +20,14 @@ When you click the **Knit** button a document will be generated that includes bo
   c. Size of the bubble will be the number of letters in each tweet<br></br>
   d. Color of the bubble will be based on the device used<br></br>
 
+<br></br>
 ## Deleting all variables
 ```{r clear workspace}
 rm(list=ls())
 ```
+<br></br>
 ## Install and load libraries
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(tm)
 library(dplyr)
 library(stringi)
@@ -35,8 +37,10 @@ library(ggplot2)
 library(plotly)
 library(SnowballC) ## Snowball stemmers based on the C libstemmer UTF-8 library
 library(corrplot)
+library(heatmaply) ## For drawing dendrogram along with correlation
 ```
 
+<br></br>
 ## Read the tweets and create a dataframe
 ```{r}
 modi.tweets <- 
@@ -60,6 +64,7 @@ modi.tweets.subset <- subset(modi.tweets, as.Date("2016-10-31") < created_at & a
 names(modi.tweets)
 class(modi.tweets$created_at)
 ```
+<br></br>
 ## Draw Scatter Plot
 ```{r}
 modi.tweets.plot <- 
@@ -70,10 +75,18 @@ modi.tweets.plot <-
   ggtitle("Narendra Modi Tweets for the month of Nov") +
   labs(x = "Favourite Tweet Count", y = "Re-tweets Connt") +
   theme(legend.position = "bottom", legend.direction = "horizontal")
+```
 
-plot(modi.tweets.plot)
+## dynamic plot
+```{r}
 ggplotly(modi.tweets.plot)
 ```
+
+## Static plot
+```{r }
+plot(modi.tweets.plot)
+```
+
 ## Problem Statement - 2
 Use text mining package to create a word cloud for modi's tweet. While applying mapping, use SnowballC package to apply stemming
 ```{r}
@@ -152,7 +165,7 @@ custom_content_transformer <-
 keep = "#\\S+"
 hashtag_tweet_corpus <- tm_map(tweet_corpus, custom_content_transformer, keep)
 
-# lapply(hashtag_tweet_corpus[1:5000], as.character)
+#class(hashtag_tweet_corpus)
 
 hashtag.tdm <- TermDocumentMatrix(hashtag_tweet_corpus)
 hashtags.tdm.df <- data.frame(as.matrix(hashtag.tdm))
@@ -160,14 +173,8 @@ hashtags.tdm.df <- data.frame(as.matrix(hashtag.tdm))
 hashtag.dtm <- DocumentTermMatrix(hashtag_tweet_corpus)
 hashtags.dtm.df <- data.frame(as.matrix(hashtag.dtm))
 
-View(hashtags.tdm.df)
-View(hashtags.dtm.df)
-```
-## Part - A
-Use corrplot to show the correlations
-```{r}
-## Filter out first top 50 words (most frequently )
-top10.df <- data.frame(rowSums(as.matrix(hashtag.tdm)))
+## Filter out first top 10 words (most frequently )
+top10.df <- data.frame(rowSums(as.matrix(hashtag.tdm)[setdiff(rownames(as.matrix(hashtag.tdm)),c("character")),]))
 names(top10.df) <- 'count'
 top10.df$hashtags <- rownames(top10.df)
 
@@ -175,16 +182,25 @@ top10.df <- top10.df %>% arrange(-count)
 top10.df <- head(top10.df,10)
 top.hashtags <- top10.df$hashtags
 top.hashtags
+```
+
+## Part - A
+Use corrplot to show the correlations
+```{r}
 
 hashtags.tdm.df.10 <- hashtags.dtm.df[, top.hashtags]
-hashtags.tdm.df.10
+# hashtags.tdm.df.10
 
 cor_hashtags <- cor(hashtags.tdm.df.10)
-corrplot(cor_hashtags,method="color" )
+corrplot(cor_hashtags,method="ellipse" )
+corrplot.mixed(cor_hashtags)
+
 ```
+
 ## Part - B
 Using any other package, draw the correlation along with dendrograms
 ```{r}
-corrplot(cor_hashtags,method="color" )
+## Correlation diagram woth dendrogam using 'heatmaply' package
+heatmaply_cor(cor_hashtags)
 ```
 

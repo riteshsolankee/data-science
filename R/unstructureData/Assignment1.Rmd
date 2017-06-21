@@ -126,8 +126,8 @@ minutesPlot <-
   xlab("\nDay Wise Hours\n") +
   ylab("\nTweet Count")
 
-## Dynamic line chart using 'plotly'
-ggplotly(minutesPlot)
+# ## Dynamic line chart using 'plotly'
+# ggplotly(minutesPlot)
 ## Static line chart 
 plot(minutesPlot)
 ```
@@ -299,10 +299,10 @@ bar_chart_qtr_tweet_count <-
   theme_light() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   ggtitle("Quarterly Top 5 Hashtag Count", subtitle="Users Vs Tweet Count") + 
-  xlab("\n Hashtag") + 
+  xlab("\n Top-5 - Hashtags") + 
   ylab("\n Hashtag Count") +
-  facet_grid(~qtr)
-ggplotly(bar_chart_qtr_tweet_count)
+  facet_wrap(~qtr, ncol = 5, scales = "free")
+# ggplotly(bar_chart_qtr_tweet_count)
 plot(bar_chart_qtr_tweet_count)
 ```
 
