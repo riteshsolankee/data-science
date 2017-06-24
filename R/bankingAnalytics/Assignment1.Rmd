@@ -1,0 +1,189 @@
+---
+title: "BA - Personal Loan Analysis - Assignment -1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Problem Statement :
+<br>The Marketing manager wants to understand the data better. She wishes to explore if this data shows some trends about what type of people buy personal loans.</br>
+
+## Clear workspace by deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+## Install and load libraries
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(VIM)
+library(ggplot2)
+library(plotly)
+library(caret)
+library(pROC)
+```
+# DCOVA - Analysis
+## [ D ]
+###Define the data
+  - The bank has the data as CSV file, therefore we don't need external dataset
+
+## [ C ]
+### Collect the data
+  - The data is available as comma seperated value(csv) file - 'bank-data.csv'
+  - Since there is only one data, we dont need to use any merge or append
+  - We will read (import) this file into our tool for processing 
+
+```{r, message=TRUE}
+bank.data <- 
+  read.csv(
+    "data/bank-data.csv",
+    stringsAsFactors = F)
+
+## Data summary
+summary(bank.data)
+## Type of variables
+str(bank.data)
+## Vriable names 
+names(bank.data)
+## Number of rows and columns
+dim(bank.data)
+```
+
+## [ O ]
+### Organize data 
+  - We will explore data for :
+    - Missing value
+    - Check for outlier 
+    - create dummy variables for the character variables 
+    - create train and test data set for prediction process
+```{r, organize}
+## Check for missing values
+aggr(bank.data, prop = T, numbers = T)
+## There is no missing value in the provided data 
+
+## removed ID column as it is contains unique values, which not required for prediction
+bank.data$id <- NULL
+
+## Convert int columns - 'age' & 'income' to numeric
+bank.data$age <- as.numeric(bank.data$age)
+bank.data$income <- as.numeric(bank.data$income)
+
+
+# use caret dummyVars function for hot one encoding for categorical features
+dummies <- dummyVars(~.,bank.data["region"])
+region.dummies <- predict(dummies,bank.data["region"])
+class(region.dummies)
+region.dummies <- as.data.frame(region.dummies)
+bank.data <- bank.data[setdiff(names(bank.data), c("region"))]
+
+## Change all 'NO' to '1' and 'YES' to '0'
+bank.data[bank.data == "NO"] <- 0
+bank.data[bank.data == "YES"] <- 1
+bank.data[bank.data == "FEMALE"] <- 0
+bank.data[bank.data == "MALE"] <- 1
+
+pl <- bank.data$pl
+bank.data$pl <- NULL
+bank.data <- cbind(bank.data, region.dummies)
+bank.data$pl <- pl
+
+## Convert all dummy attribures to factor
+att <- setdiff(names(bank.data), c("age", "income"))
+for(c in att){
+  bank.data[[c]] <- as.factor(bank.data[[c]])
+}
+
+## Final dataset after Organize step 
+str(bank.data)
+
+```
+## Splitting data into test and train using caret package
+```{r}
+## split data set into 75% - train and 25% - test
+smp_size <- floor(0.75 * nrow(bank.data))
+set.seed(123)
+index <- sample(seq_len(nrow(bank.data)), size = smp_size)
+bank.data.train <- bank.data[index, ]
+bank.data.test <- bank.data[-index,]
+head(bank.data.train)
+dim(bank.data.train)
+xtabs(~bank.data.train$pl)
+head(bank.data.test)
+dim(bank.data.test)
+xtabs(~bank.data.test$pl)
+
+```
+## [ V ]
+### Visualization of  data 
+
+```{r}
+## Age vs personal Loan
+p <- ggplot(bank.data.test, aes(factor(bank.data.test$pl), bank.data.test$age))
+p + geom_boxplot()
+
+## Income vs personal Loan
+p <- ggplot(bank.data.test, aes(factor(bank.data.test$pl), bank.data.test$income)) + geom_boxplot()
+p + geom_boxplot()
+
+## Income vs personal Loan
+p <- ggplot(bank.data.test, aes(factor(bank.data.test$pl), as.numeric(bank.data.test$children)))
+p + geom_boxplot()
+xtabs(~bank.data.test$pl + bank.data.test$children)
+```
+## [ A ]
+### Analysis
+
+```{r}
+mylogit <- glm(pl ~. , data = bank.data.train, family = "binomial")
+
+## Get summary of the model
+summary(mylogit)
+
+## Check significant of hte variable
+anova(mylogit,test="Chisq")
+
+
+## Backward selection
+backward.logit <- step(mylogit, direction = "backward")
+summary(backward.logit)
+anova(backward.logit,test="Chisq")
+
+## Forward selection
+forward.logit <- step(mylogit, direction = "forward")
+summary(forward.logit)
+anova(forward.logit,test="Chisq")
+
+```
+
+## Predictions using models created
+```{r}
+## Predictions
+bank.data.test$p1<- predict(mylogit, bank.data.test, type="response")
+
+bank.data.test$p2<- predict(backward.logit, bank.data.test, type="response")
+
+bank.data.test$p3<- predict(forward.logit, bank.data.test, type="response")
+
+# AUC - regression with all attribures
+auc(bank.data.test$pl, bank.data.test$p1)
+# AUC - backward regression
+auc(bank.data.test$pl, bank.data.test$p2)
+# AUC - forward regression
+auc(bank.data.test$pl, bank.data.test$p3)
+
+```
+
+## [ I ]
+### Inferences 
+  - With the above analysis, we can take the backward logistic regression which leads to following inferences:
+    -  Personal loan is heighly dependent on number of children in a family followed by income, marital status and saving account status
+    - It is moderatly dependent on reagion (suburban) and sex
+    
+
