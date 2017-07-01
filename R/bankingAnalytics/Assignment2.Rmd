@@ -1,0 +1,100 @@
+---
+title: "BA - Assignment-2"
+author: "Ritesh Kumar"
+date: "6/24/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Load Libraries
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(VIM)
+library(ggplot2)
+library(plotly)
+library(caret)
+library(pROC)
+```
+
+## Load files
+```{r}
+insurance.data <- 
+  read.csv(
+    "data/TIV_insurance.csv",
+    stringsAsFactors = F)
+
+## Data summary
+summary(insurance.data)
+## Type of variables
+str(insurance.data)
+## Vriable names 
+names(insurance.data)
+## Number of rows and columns
+dim(insurance.data)
+```
+
+## Visualisation
+```{r}
+insurance <- insurance.data[, c("tiv_2015", "tiv_2016", "Residential", "Commercial")]
+insurance.res <- insurance[insurance$Residential == 1, ]
+insurance.comm <- insurance[insurance$Commercial == 1, ]
+
+# View(insurance.comm)
+# par(mfrow=c(3, 3))
+# Box plot
+for(x in c("tiv_2015", "tiv_2016")){
+  boxplot(insurance.res[,x], horizontal=TRUE, main=x)
+  boxplot(insurance.comm[,x], horizontal=TRUE, main=x)
+  boxplot(insurance[,x], horizontal=TRUE, main=x)
+}
+
+
+# Histogram
+for(x in c("tiv_2015", "tiv_2016")){
+  hist(insurance.res[,x], breaks=100, main = x)
+  hist(insurance.comm[,x], breaks=100000, main = x)
+  hist(insurance[,x], breaks=1000, main = x)
+}
+
+
+# Density plot
+for(x in c("tiv_2015", "tiv_2016")){
+  d1 <- density(insurance.res[, x])
+    plot(d1, type="n", main=x)
+    polygon(d1, col="red", border="gray")
+  
+  d2 <- density(insurance.comm[, x])
+    plot(d2, type="n", main=x)
+    polygon(d2, col="red", border="gray")
+
+  d2 <- density(insurance[, x])
+    plot(d2, type="n", main=x)
+    polygon(d2, col="red", border="gray")
+}
+
+# Violin plot
+library(vioplot)
+for(x in c("tiv_2015", "tiv_2016")){
+  vioplot(insurance.res[,x], horizontal=TRUE, col="gray")
+  vioplot(insurance.res[,x], horizontal=TRUE, col="gray")
+  vioplot(insurance[,x], horizontal=TRUE, col="gray")
+}
+
+
+# Bean plot
+library(beanplot)
+beanplot(insurance.res[,c("tiv_2015", "tiv_2016")])
+beanplot(insurance.comm[,c("tiv_2015", "tiv_2016")])
+beanplot(insurance[,c("tiv_2015", "tiv_2016")])
+
+```
+
