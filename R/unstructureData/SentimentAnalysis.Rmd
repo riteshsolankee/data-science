@@ -1,0 +1,125 @@
+---
+title: "SentimentAnalysis"
+author: "Ritesh Kumar"
+date: "7/1/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Clear workspace by deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+## Install and load libraries
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(rJava)
+library(RMongo)
+library(twitteR)
+library(ROAuth)
+library(httr)
+library(base64enc)
+library(httk)
+library(RCurl)
+library(jsonlite)
+library(RSentiment)
+library(stringi)
+library(stringr)
+```
+## Twitter utility function
+```{r}
+serchHashtagTwitter <- function(hashtag, tweet.count) {
+  api_key <- "MJV2Ue0841ZvZcTjlj2ljPbCM"
+  api_secret <- "4UJ38gECMGyK6wtmlpd4vxZgb5bWm30SMipJ15D1vFNKToVdwK"
+  token <- "147624175-zLAkL4BeyLYo7Il4dpwPg2x7C5WvvGBLOnlW6SWM"
+  token_secret <- "1An3nzmzWGxwhjcTXAqmTJhHuBvr8dO74FNEtK9pJABVX"
+  
+  httr::set_config( config( ssl_verifypeer = 0L ) )
+  
+  setup_twitter_oauth(
+    consumer_key = api_key,
+    consumer_secret = api_secret,
+    access_token = token,
+    access_secret = token_secret)
+  
+  data.tweet <- searchTwitter(hashtag, tweet.count)
+  # data.tweet <- userTimeline(hashtag, 5)
+  ## Convert the tweets to Dataframe
+  twListToDF(data.tweet)
+}
+```
+## get GST tweet data
+```{r}
+tweet.gst <- serchHashtagTwitter('#GST', 5000)
+head(tweet.gst)
+dim(tweet.gst)
+# write.csv(tweet.gst, file = "data/gst_tweet.csv")
+RSentiment::calculate_sentiment("I love my apple")
+RSentiment::calculate_sentiment("I hate my apple")
+
+tweet.gst$text_transformed <- gsub("[^A-Za-z0-9///'/#/_ ]", " ", tweet.gst$text)
+tweet.gst$sentiment <- RSentiment::calculate_score(tweet.gst$text_transformed)
+table(tweet.gst$sentiment)
+
+tweet.gst.100 <- head(tweet.gst, 1000)
+tweet.gst.100$sentiment <- RSentiment::calculate_sentiment(tweet.gst.100$text)
+
+View(tweet.gst.100)
+
+positive.words <- scan("data/positive-words.txt", 
+                       what="character",
+                       comment.char = ";")
+negative.words <- scan("data/negative-words.txt", 
+                       what="character",
+                       comment.char = ";")
+
+class(positive.words)
+
+
+
+
+
+```
+```{r}
+sentence_polarity <- function(sentence, pos.words, neg.words){
+  
+  sentence <- tolower(gsub("[^A-Za-z0-9///' ]", " ", sentence))
+  words <- unlist(str_split(sentence, " "))
+  pos.count <- sum(!is.na(match(words,pos.words)))
+  neg.count <- sum(!is.na(match(words,neg.words)))
+  if(pos.count > neg.count){
+    return ("Positive")
+  }else{
+    return ("Negative")
+  }
+}
+
+sentence_polarity_count <- function(sentence, pos.words, neg.words){
+  
+  sentence <- tolower(gsub("[^A-Za-z0-9///' ]", " ", sentence))
+  words <- unlist(str_split(sentence, " "))
+  pos.count <- sum(!is.na(match(words,pos.words)))
+  neg.count <- sum(!is.na(match(words,neg.words)))
+  polarity <- pos.count - neg.count
+}
+
+tweet.gst.100$sentiment1 <- lapply(tweet.gst.100$text, sentence_polarity, positive.words,negative.words)
+tweet.gst.100$polarity <- lapply(tweet.gst.100$text, sentence_polarity_count, positive.words,negative.words)
+View(tweet.gst.100)
+
+table(unlist(tweet.gst.100$sentiment1))
+table(unlist(tweet.gst.100$polarity))
+
+tweets_senti <- select(tweet.gst, subset=c('text', 'sentiment'))
+View(tweets_senti)
+```
+

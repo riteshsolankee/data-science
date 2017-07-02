@@ -1,0 +1,97 @@
+---
+title: "SentimentAnalysis"
+author: "Ritesh Kumar"
+date: "7/1/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Clear workspace by deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+## Install and load libraries
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(rJava)
+library(RMongo)
+library(twitteR)
+library(ROAuth)
+library(httr)
+library(base64enc)
+library(httk)
+library(RCurl)
+library(mongolite)
+library(jsonlite)
+library(stringi)
+library(stringr)
+```
+
+```{r}
+engine <- mongoDbConnect("test", "localhost", 27017) 
+result <- dbGetQuery(engine, "tweets", "{'gender':'male'}")
+
+engine <- mongoDbConnect("test_manipal_R2", "localhost", 27017)
+
+## insert data
+data_doc <- "{'name':'manish', 'gender':'male'}"
+dbInsertDocument(engine, "tweets", data_doc)
+
+## Query based on high level key
+result <- dbGetQuery(engine, "tweets", "{'gender': 'male'}")
+dim(result)
+```
+## Tweeter Scraping
+```{r}
+serchHashtagTwitter <- function(hashtag) {
+  api_key <- "MJV2Ue0841ZvZcTjlj2ljPbCM"
+  api_secret <- "4UJ38gECMGyK6wtmlpd4vxZgb5bWm30SMipJ15D1vFNKToVdwK"
+  token <- "147624175-zLAkL4BeyLYo7Il4dpwPg2x7C5WvvGBLOnlW6SWM"
+  token_secret <- "1An3nzmzWGxwhjcTXAqmTJhHuBvr8dO74FNEtK9pJABVX"
+  
+  httr::set_config( config( ssl_verifypeer = 0L ) )
+  
+  setup_twitter_oauth(
+    consumer_key = api_key,
+    consumer_secret = api_secret,
+    access_token = token,
+    access_secret = token_secret)
+  
+  # data.science.tweet <- searchTwitter("#datascience", 5000)
+  data.tweet <- userTimeline(hashtag, 5)
+  ## Convert the tweets to Dataframe
+  twListToDF(data.tweet)
+}
+
+modi.df <- serchHashtagTwitter('narendramodi')
+```
+## Updating into mongoDB
+```{r}
+
+tweets.list <- lapply(split(modi.df, rownames(modi.df)), as.list)
+names(tweets.list) <- NULL
+
+engine <- mongoDbConnect("r_twitter_mongo", "localhost", 27017)
+# dbInsertDocument(engine, "tweets", data_doc)
+
+for(i in 1:NROW(tweets.list)){
+  tweet <- tweets.list[[i]]
+  tweet$words <- unlist(str_split(tweet$text, ' '))
+  tweet_json <- jsonlite::toJSON(tweet)
+  dbInsertDocument(engine, "tweets_words", as.character(tweet_json))
+}
+
+r <- dbGetQuery(engine, "tweets_words", "{'words': {$in:['GST']}}")
+class(r)
+dim(r)
+```
+

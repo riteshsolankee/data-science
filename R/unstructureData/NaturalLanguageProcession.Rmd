@@ -1,0 +1,54 @@
+---
+title: "NLP"
+author: "Ritesh Kumar"
+date: "7/2/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Clear workspace by deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+
+## Install and load libraries
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(twitteR)
+library(ROAuth)
+library(httr)
+library(base64enc)
+library(httk)
+library(RCurl)
+library(jsonlite)
+library(RSentiment)
+library(stringi)
+library(stringr)
+library(NLP)
+library(openNLP)
+library(maxent)
+library(sringr)
+library(stringi)
+```
+
+## Parts of speech
+```{r}
+sent <- "This is a sample sentance for parts of speech !!. This is @Wow :-)"
+sent <- as.String(sent)
+# sentAnnotator <- Maxent_Sent_Token_Annotator()
+annotate_sent <- annotate(sent, Maxent_Sent_Token_Annotator())
+(wordAnnotator <- annotate(s = sent, f = Maxent_Word_Token_Annotator(probs = T), a = annotate_sent))
+
+(posAnnotator <- annotate(s = sent, f = Maxent_POS_Tag_Annotator(probs = T), a = wordAnnotator))
+
+
+```

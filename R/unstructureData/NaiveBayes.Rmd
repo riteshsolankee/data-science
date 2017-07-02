@@ -1,0 +1,67 @@
+---
+title: "NaiveBayes"
+author: "Ritesh Kumar"
+date: "7/2/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Clear workspace by deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+
+## Install and load libraries
+```{r, message=FALSE, warning=FALSE}
+library(e1071)
+library(tm)
+```
+
+## Load data email and label data. Create a corpus
+```{r}
+files.path <- "data/CSDMC2010_SPAM/emails"
+email.corpus <- Corpus(DirSource(files.path))
+
+corpus.clean <- email.corpus %>%
+  tm_map(content_transformer(tolower)) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removeWords, stopwords(kind='en')) %>%
+  tm_map(stripWhitespace)
+
+dtm <- DocumentTermMatrix(corpus.clean)
+dim(dtm)
+
+df.dtm <- data.frame(as.matrix(dtm))
+dim(df.dtm)
+
+lab <- read.csv("data/CSDMC2010_SPAM/SPAMTrain.csv")
+head(lab)
+table(lab$label)
+
+# lab.0 <- lab[lab$label == 0, ]
+# lab.1 <- lab[lab$label == 1, ]
+# dim(lab.0)
+# dim(lab.1)
+
+dtm.train <- dtm[1:250, ]
+dtm.test <- dtm[251:299, ]
+
+
+
+```
+
+## Naive Bayes
+```{r}
+
+```
+

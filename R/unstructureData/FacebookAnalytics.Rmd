@@ -1,0 +1,62 @@
+---
+title: "FacebookAnalytics"
+author: "Ritesh Kumar"
+date: "7/1/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Install and load libraries
+```{r, message=FALSE, warning=FALSE}
+library(Rfacebook)
+```
+
+## Get Auth Token
+```{r}
+
+  app.id <- "162216887655197"
+  app.secret <- "7b4d13b992a7718658595a62306e8f3e"
+  fb_Oauth <- fbOAuth(app_id = app.id, app_secret = app.secret, extended_permissions = T)
+  
+
+```
+
+## Scraping facebook
+```{r}
+getUsers("me", fb_Oauth)
+token <- "EAACEdEose0cBAN3hc6lRyJ12EYCD2n0ybYqbI2mrZChnlV3M4V5EZBq59bIge0ZB72dygWsVZBpzetkzMZCE3m6DMSrNGGph5ful5dsLvqSKN34W6GPc4Fal3p9ct9GmZCTdendr6oLX4yE15OdVJiUM7BFOLhVkxXriF9F4Qa96xHpeZBZC3wLJId286kmYdLkZD"
+getUsers("me", token = token, private_info = T)
+
+my.likes <- getLikes("me", token = fb_Oauth)
+  
+page.detail <- getPage(390976557590103, token = fb_Oauth, n=10)
+
+View(page.detail)
+post.detail <- getPost("390976557590103_1650214891666257", token = fb_Oauth)
+
+View(post.detail$comments)
+
+pages <- searchPages(string = 'modi', token = fb_Oauth, n=20)
+View(pages)
+
+write.csv(pages, file = "data/modiFacebook.csv")
+
+pages$newcol <- paste(pages$latitude, ",",pages$longitude)
+head(pages)
+pages.new <-  pages[ which( complete.cases(pages$latitude)) , ] 
+View(pages.new)
+View(pages.new$newcol)
+
+
+
+```
+
