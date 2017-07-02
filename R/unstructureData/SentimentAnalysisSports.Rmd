@@ -1,6 +1,6 @@
 ---
 title: "SentimentAnalysisSports"
-author: "Ritesh Kumar"
+author: "Ritesh Kumar, Anurag, Keerthi, Harsha"
 date: "7/1/2017"
 output: html_document
 ---
@@ -24,7 +24,6 @@ rm(list=ls())
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
 library(rJava)
-library(RMongo)
 library(twitteR)
 library(ROAuth)
 library(httr)
@@ -35,6 +34,10 @@ library(jsonlite)
 library(RSentiment)
 library(stringi)
 library(stringr)
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(ggplot2)
 ```
 
 ## Twitter set-up
@@ -53,32 +56,239 @@ serchHashtagTwitter <- function(hashtag.list, tweet.Count) {
     access_token = token,
     access_secret = token_secret)
   
-  do.call (
-    "rbind", 
-    lapply(
-      hashtag.list, function(hashtag) {twListToDF(searchTwitter(hashtag, tweet.Count))}))
+  twListToDF(searchTwitter(hashtag, tweet.Count))
+}
+```
+
+## Code to read the tweets from CSV file which were downloaded from Twitter API and saved as csv
+```{r}
+readCSVFile <- function(tweetfile.Path){
+  df <- read.csv(
+    tweetfile.Path,
+    stringsAsFactors = F)
+  #View(df)
+  df$created <-  strptime(df$created,format="%Y-%m-%d %H:%M:%S", tz="GMT")
+  df$created <- as.POSIXct(df$created)
+  df
 }
 ```
 ## get Dataframe from tweets
 ```{r}
-hashtag.list1 <- list("@IndianCricket")
-sports.df <- serchHashtagTwitter(hashtag.list1, 5000)
-write.csv(sports.df, file = "data/indian_kabaddi_df.csv")
-View(sports.df)
-dim(sports.df)
+# hockey_tweets = serchHashtagTwitter('@TheHockeyIndia', 5000)
+# kabaddi_tweets = serchHashtagTwitter('@ProKabaddi', 5000)
+# football_tweets = serchHashtagTwitter('@IndianFootball', 5000)
+# write.csv(hockey_tweets, file = "data/indian_hockey_df.csv")
+# write.csv(kabaddi_tweets, file = "data/indian_football_df.csv")
+# write.csv(football_tweets, file = "data/indian_kabaddi_df.csv")
+
+hockey.df <- readCSVFile("data/indian_hockey_df.csv")
+football.df <- readCSVFile("data/indian_football_df.csv")
+kabaddi.df <- readCSVFile("data/indian_kabaddi_df.csv")
 
 
-football_tweets = searchTwitter('@IndianFootball', n=5000)
-hockey_tweets = searchTwitter('@TheHockeyIndia', n=5000)
-cricket_new_tweets = searchTwitter('@IndianCricNews', n=5000)
-cricket_tm_tweets = searchTwitter('@IndianCricketTm', n=5000)
-indian_sport_tweets = searchTwitter('@IndiaSports', n=5000)
-
-hockey_txt = sapply(hockey_tweets, function(t) t$getText() )
-cricket_new_txt = sapply(cricket_new_tweets, function(t) t$getText() )
-cricket_tm_txt = sapply(cricket_tm_tweets, function(t) t$getText() )
-indian_sport_txt = sapply(indian_sport_tweets, function(t) t$getText() )
+dim(hockey.df)
+dim(football.df)
+dim(kabaddi.df)
 
 
 ```
+```{r}
+dataCleanUp <- function(df){
+  ## Convert the text column to character
+df$text <- as.character(df$text)
+## removed the spacial character excluding '_' and '#'
+df$text_transformed <- gsub("[^A-Za-z0-9///'/#/_ ]", " ", df$text)
+## convert the the transformed text column to lower case
+df$text_transformed <- lapply(df$text_transformed, tolower)
 
+tweet_corpus = Corpus(VectorSource(df$text_transformed))
+tweet_corpus = tm_map(tweet_corpus, content_transformer(tolower))
+
+## Remove Punctuation
+tweet_corpus = tm_map(tweet_corpus, removePunctuation)
+
+## Convert to Plain Text Format
+tweet_corpus = tm_map(tweet_corpus, PlainTextDocument)
+
+## To resolve the error 'simple_triplet_matrix 'i, j, v' different lengths'
+tweet_corpus <- Corpus(VectorSource(tweet_corpus))
+
+## Remove Stopwords
+tweet_corpus = tm_map(tweet_corpus, removeWords, stopwords('english'))
+
+# tweet_corpus = tm_map(tweet_corpus, stemDocument)
+
+## If you want to remove the words ‘the’ and ‘this’, you can include them 
+## in the removeWords function as follows:
+tweet_corpus <- tm_map(tweet_corpus, removeWords, c('the', 'this','https', 'http','amp', 'thehockeyindia', 'prokabaddi', 'indianfootball', 'rajeshmadaan13', 'indsuperleague', 'coi3nvd40rmy' , stopwords('english')))
+
+tweet_corpus
+}
+
+tweet_corpus_hockey <- dataCleanUp(hockey.df)
+tweet_corpus_football <- dataCleanUp(football.df)
+tweet_corpus_kabaddi <- dataCleanUp(kabaddi.df)
+
+## Create Word Cloud
+wordcloud(
+  tweet_corpus_hockey,
+  min.freq = 100,
+  random.order = F,
+  colors = palette(rainbow(6))
+  )
+title("\n Hockey")
+
+  wordcloud(
+  tweet_corpus_football,
+  min.freq = 50,
+  random.order = F,
+  colors = palette(rainbow(6))
+  )
+  title("\nFootball\n")
+  
+  wordcloud(
+  tweet_corpus_kabaddi,
+  min.freq = 50,
+  random.order = F,
+  colors = palette(rainbow(6))
+  )
+  title("\nKabaddi\n")
+
+```
+
+## Sentiment
+```{r}
+
+cleanUP <- function(df) {
+  df$text <- as.character(df$text)
+  ## removed the spacial character excluding '_' and '#'
+  df$text_transformed <- gsub("[^A-Za-z0-9///'/#/_ ]", " ", df$text)
+  ## convert the the transformed text column to lower case
+  df$text_transformed <- lapply(df$text_transformed, tolower)
+  df
+}
+
+pos.words <- scan('data/positive-words.txt', what='character', comment.char=';')
+neg.words <- scan('data/negative-words.txt', what='character', comment.char=';')
+
+score.sentiment = function(sentences, pos.words, neg.words, .progress='none')
+{
+    require(plyr)
+    require(stringr)
+    scores = laply(sentences, function(sentence, pos.words, neg.words) {
+        sentence = gsub("[^A-Za-z0-9///'/#/_ ]", " ", sentence)
+        sentence = gsub('[[:punct:]]', '', sentence)
+        sentence = gsub('[[:cntrl:]]', '', sentence)
+        sentence = gsub('\\d+', '', sentence)
+        sentence = tolower(sentence)
+        word.list = str_split(sentence, '\\s+')
+        words = unlist(word.list)
+        pos.matches = match(words, pos.words)
+        neg.matches = match(words, neg.words)
+        pos.matches = !is.na(pos.matches)
+        neg.matches = !is.na(neg.matches)
+        score = sum(pos.matches) - sum(neg.matches)
+        return(score)
+    }, pos.words, neg.words, .progress=.progress )
+    scores.df = data.frame(score=scores, text=sentences)
+    return(scores.df)
+}
+
+
+hockey.scores <- score.sentiment(hockey.df$text, pos.words, 
+                                   neg.words, .progress='none')
+football.scores <- score.sentiment(football.df$text, pos.words, 
+                                   neg.words, .progress='none')
+kabaddi.scores <- score.sentiment(kabaddi.df$text, pos.words, 
+                                   neg.words, .progress='none')
+
+hockey.scores$sports = 'Hockey'
+football.scores$sports = 'Football'
+kabaddi.scores$sports = 'Kabaddi'
+
+aleast.scores = rbind(hockey.scores, football.scores, kabaddi.scores)
+
+ggplot(data=aleast.scores) +
+    geom_histogram(mapping=aes(x=score, fill=sports), binwidth=1) + 
+    facet_grid(sports~.) +
+    theme_bw() + scale_color_brewer() +
+    labs(title="Indian Sports")
+
+ggplot(aleast.scores, aes(x=sports, y=score, group=sports)) +
+    geom_boxplot(aes(fill=sports)) +
+    geom_jitter(color="gray40",
+                position=position_jitter(width=0.2), alpha=0.3) +
+    ggtitle("Sports Sentiment Scores (India)")
+
+```
+```{r}
+
+topPositveSentiment <- function(score, n){
+  
+  scores.positive <- score[score$score > 0 , ]
+  scores.positive.hashtag <- table(unlist(str_extract_all(scores.positive$text, "#\\w+")))
+  top.10 <- head(sort(scores.positive.hashtag, decreasing= T), n)
+  as.data.frame(top.10)
+}
+
+hockey.top <- topPositveSentiment(hockey.scores, 10)
+hockey.top$sports <- "hockey"
+football.top <- topPositveSentiment(football.scores, 10)
+football.top$sports <- "football"
+kabaddi.top <- topPositveSentiment(kabaddi.scores, 10)
+kabaddi.top$sports <- "kabaddi"
+# View(hockey.top)
+df.list <- list(hockey.top, football.top, kabaddi.top)
+
+top10.grp.df <- do.call("rbind", df.list)
+
+
+
+bar_positive_chart <- 
+  ggplot(top10.grp.df, aes(x = reorder(Var1,-Freq), y = Freq)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle(" Indian Sports", subtitle="Top 10 Positive Hashtag Count") + 
+  xlab("\n Top-10 - Hashtags") + 
+  ylab("\n Hashtag Count") +
+  facet_wrap(~sports, ncol = 5, scales = "free")
+
+bar_positive_chart
+```
+## Negative
+```{r}
+
+topNegativeSentiment <- function(score, n){
+  
+  scores.positive <- score[score$score < 0 , ]
+  scores.positive.hashtag <- table(unlist(str_extract_all(scores.positive$text, "#\\w+")))
+  top.10 <- head(sort(scores.positive.hashtag, decreasing= T), n)
+  as.data.frame(top.10)
+}
+
+hockey.top <- topNegativeSentiment(hockey.scores, 10)
+hockey.top$sports <- "hockey"
+football.top <- topNegativeSentiment(football.scores, 10)
+football.top$sports <- "football"
+kabaddi.top <- topNegativeSentiment(kabaddi.scores, 10)
+kabaddi.top$sports <- "kabaddi"
+# View(hockey.top)
+df.list <- list(hockey.top, football.top, kabaddi.top)
+
+top10.grp.df <- do.call("rbind", df.list)
+
+
+
+bar_negative_chart <- 
+  ggplot(top10.grp.df, aes(x = reorder(Var1,-Freq), y = Freq)) + 
+  geom_bar(stat = 'identity') + 
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle(" Indian Sports", subtitle="Top 10 Negative Hashtag Count") + 
+  xlab("\n Top-10 - Hashtags") + 
+  ylab("\n Hashtag Count") +
+  facet_wrap(~sports, ncol = 5, scales = "free")
+
+bar_negative_chart
+```

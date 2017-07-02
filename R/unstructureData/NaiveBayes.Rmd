@@ -56,8 +56,49 @@ table(lab$label)
 dtm.train <- dtm[1:250, ]
 dtm.test <- dtm[251:299, ]
 
+freq.words <- findFreqTerms(dtm.train, 100)
+class(freq.words)
 
+corpus.train <- corpus.clean[1:250]
+corpus.test <- corpus.clean[251:299]
 
+(dtm.train.nb <- DocumentTermMatrix(corpus.train, 
+                                  control = list(dictionary = freq.words)))
+(dtm.test.nb <- DocumentTermMatrix(corpus.test, 
+                                  control = list(dictionary = freq.words)))
+
+# dtm.train.nb.df <- as.data.frame(as.matrix(dtm.train.nb))
+dtm.train.nb.df <- 
+  lapply(
+    as.data.frame(as.matrix(dtm.train.nb)), 
+    function(y){y[y == 0] <- "NO";y[y > 0 & y != "NO"] <- "YES"; y})
+
+dtm.test.nb.df <- 
+  lapply(
+    as.data.frame(as.matrix(dtm.test.nb)), 
+    function(y){y[y == 0] <- "NO";y[y > 0 & y != "NO"] <- "YES"; y})
+
+class(lab)
+# lab[lab$label == '0'] <- "No"
+lab$label <- gsub(lab$label, pattern = "0", replacement = "Not Spam")
+lab$label <- gsub(lab$label, pattern = "1", replacement = "Spam")
+
+# library(e1071)
+
+lab.train <- lab[1:250, 'label']
+lab.test <- lab[251:299, 'label']
+
+lab.test
+
+lab.train <- as.factor(lab.train)
+model <- naiveBayes(dtm.train.nb.df, lab.train)
+
+pred <- predict(model, newdata = dtm.test.nb.df) 
+
+table(pred, lab.test)
+
+View(dtm.train.nb.df)
+View(dtm.test.nb.df)
 ```
 
 ## Naive Bayes
