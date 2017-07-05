@@ -1,0 +1,233 @@
+---
+title: "AdvanceMLPreparation"
+author: "Ritesh Kumar"
+date: "7/4/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Deleting all variables
+```{r clear workspace}
+rm(list=ls())
+```
+
+## Load libraries
+```{r}
+library(rdatamarket)
+library(forecast)
+library(tseries)
+```
+
+## usefull timeseries functions
+```{r}
+data()
+# print(EuStockMarkets)
+
+#View the Data
+data <-dmlist("http://data.is/1RvZGQL")
+class(data)
+
+# Is this data a time series Object ?
+is.ts(data)
+
+# Get Time Series Data
+tsdata<-as.ts(dmseries("http://data.is/1RvZGQL"))
+
+# Is this data a time series Object ?
+is.ts(tsdata)
+# Time Series Object
+# print(ts(tsdata))
+# Time Series first 10 observations
+head(tsdata, 10)
+# Time Series last 10 observations
+tail(tsdata, 10)
+# Time Series number of observations
+length(tsdata)
+
+# Time Series start of observations
+start(tsdata)
+# Time Series start of observations
+end(tsdata)
+# Vector of times at which a time series was sampled
+time(tsdata)
+# Return the time interval between observations
+deltat(tsdata)
+# Return the number of samples per unit time
+frequency(tsdata)
+# Return the positions in the cycle of each observation
+cycle(tsdata)
+
+
+# Caculatethe sample mean
+mean(tsdata)
+# Get the value distribution of the observations.
+summary(tsdata)
+# Visualize the Time Series
+plot(tsdata)
+# Visualize and edit the Time Series Axis names
+plot(tsdata, xlab= "Yr-month", ylab= "Bookings")
+# # Visualize and edit the Time Series plotting type (Default type in "l")
+plot(tsdata, xlab= "Yr-month", ylab= "Bookings", type = "b")
+# Visualize seasonal plot
+seasonplot(tsdata)
+# Visualize seasonal sub-series plot or month plot.
+monthplot(tsdata)
+```
+
+## White noise 
+```{r}
+# Simulating white Noise Model
+WN_1 <-arima.sim(model = list(order= c(0,0,0)), n=50)
+head(WN_1)
+head(WN_1, 10)
+ts.plot(WN_1)
+
+# Simulating white Noise Model with mean and SD
+WN_2 <-arima.sim(model = list(order= c(0,0,0)), n=50, mean=4, sd=2)
+ts.plot(WN_2)
+
+# Extimatingwhite Noise Model
+arima(WN_2,order = c(0,0,0))
+#Alternatively
+mean(WN_2)
+var(WN_2)
+```
+
+## Random Walk
+```{r}
+# Generate a RW model using arima.sim
+random_walk<-arima.sim(model = list(order = c(0, 1, 0)), n = 100)
+# Plot random_walk
+ts.plot(random_walk)
+# Calculate the first difference series
+random_walk_diff<-diff(random_walk)
+# Plot random_walk_diff
+ts.plot(random_walk_diff)
+# Generate a RW model with a drift uingarima.sim
+rw_drift<-arima.sim(model = list(order = c(0, 1, 0)), n = 100, mean=1)
+
+# Plot rw_drift
+ts.plot(rw_drift)
+# Calculate the first difference series
+rw_drift_diff<-diff(rw_drift)
+# Plot rw_drift_diff
+ts.plot(rw_drift_diff)
+# Fit WN model to diff series
+rwmodel<-arima(rw_drift_diff,order= c(0,0,0))
+# View model
+rwmodel$sigma2
+```
+
+## Covariance and corelation 
+```{r}
+#Covariance
+cov(1:10,11:20)
+#Correlation
+cor(1:10,11:20)
+#Correlation
+cov(1:10,11:20)/sd(1:10)*sd(11:20)
+```
+
+### Introduction to ARMA Time Series Modeling
+#### AR - Auto Regression - x(t) = alpha *  x(t – 1) + error (t) - Any shock to x(t) will gradually fade off in future.
+#### MA - Moving Average - x(t) = beta *  error(t-1) + error (t) - Any noise / shock quickly vanishes with time
+#### AR or MA are not applicable on non-stationary series.
+### Exploiting ACF and PACF plots
+#### Once we have got the stationary time series, we must answer two primary questions:
+#### Q1. Is it an AR or MA process?
+#### Q2. What order of AR or MA process do we need to use?
+##### The first question can be answered using Total Correlation Chart (also known as Auto – correlation Function / ACF). ACF is a plot of total        correlation between different lag functions.In a moving average series of lag n, we will not get any correlation between x(t) and x(t – n -1). Hence, the total correlation chart cuts off at nth lag. So it becomes simple to find the lag for a MA series. 
+
+##### For an AR series this correlation will gradually go down without any cut off value. Here is the second trick. If we find out the partial correlation of each lag, it will cut off after the degree of AR series. For instance,if we have a AR(1) series,  if we exclude the effect of 1st lag (x (t-1) ), our 2nd lag (x (t-2) ) is independent of x(t). Hence, the partial correlation function (PACF) will drop sharply after the 1st lag.
+
+## Step 1: Visualize the Time Series
+### Exploration of Time Series Data in R
+```{r}
+# Loading the Data Set
+data(AirPassengers)
+class(AirPassengers)
+
+start(AirPassengers)
+end(AirPassengers)
+
+frequency(AirPassengers)
+cycle(AirPassengers)
+summary(AirPassengers)
+
+plot(AirPassengers) +
+abline(reg=lm(AirPassengers~time(AirPassengers)))
+
+#This will aggregate the cycles and display a year on year trend
+plot(aggregate(AirPassengers,FUN=mean))
+
+#Box plot across months will give us a sense on seasonal effect
+boxplot(AirPassengers~cycle(AirPassengers))
+## Conclusion:
+#   The year on year trend clearly shows that the #passengers have been increasing without fail.
+#   The variance and the mean value in July and August is much higher than rest of the months.
+#   Even though the mean value of each month is quite different their variance is small. Hence, 
+#   we have strong seasonal effect with a cycle of 12 months or less.
+
+```
+## Step 2: Stationarize the Series
+### Once we know the patterns, trends, cycles and seasonality , we can check if the series is stationary or not. Dickey – Fuller is one of the popular test to check the same.If the null hypothesis gets rejected, we’ll get a stationary time series.
+### What if the series is found to be non-stationary?
+#### There are three commonly used technique to make a time series stationary:
+####  1.  Detrending - simply remove the trend component from the time series
+####  2.  Differencing : This is the commonly used technique to remove non-stationarity.Here we try to model the differences of the terms and not the actual term. This differencing is called as the Integration part in AR(I)MA. i.e x(t) – x(t-1) = ARMA (p ,  q) .The number of times of differencing needed to render the series stationary will be the differenced I(d) term in our ARIMA model.
+#### Now, we have three parameters
+#####   p : AR
+#####   d : I
+#####   q : MA
+####  3. Seasonality : Seasonality can easily be incorporated in the ARIMA model directly.
+```{r}
+adf.test(diff(log(AirPassengers)), alternative="stationary", k=0)
+
+# We see that the series is stationary enough to do any kind of time series modelling.
+```
+
+
+## Step 3: Find Optimal Parameters
+#### The parameters p,d,q can be found using  ACF and PACF plots.An addition to this approach is can be, if both ACF and PACF decreases gradually, it indicates that we need to make the time series stationary and introduce a value to “d”.
+
+```{r}
+#ACF Plots
+plot(log(AirPassengers))
+acf(log(AirPassengers))
+# Clearly, the decay of ACF chart is very slow, which means that the population is not stationary
+# we now intend to regress on the difference of logs rather than log directly.
+
+plot(diff(log(AirPassengers)))
+acf(diff(log(AirPassengers)))
+# Clearly, ACF plot cuts off after the first lag. Hence, we understood that value of p should be 0 as the ACF is the curve getting a cut off.
+
+pacf(diff(log(AirPassengers)))
+# Value of q should be 1 or 2. After a few iterations, we found that (0,1,1) as (p,d,q) comes out to be the combination with least AIC and BIC.
+```
+
+## Step 4: Build ARIMA Model
+#### With the parameters in hand, we can now try to build ARIMA model. The value found in the previous section might be an approximate estimate        and we need to explore more (p,d,q) combinations. The one with the lowest BIC and AIC should be our choice. We can also try some models with      a seasonal component. Just in case, we notice any seasonality in ACF/PACF plots.
+```{r}
+# Also, we will try fitting in a seasonal component in the ARIMA formulation
+(fit <- arima(log(AirPassengers), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12)))
+
+```
+
+## Step 5: Make Predictions
+#### Once we have the final ARIMA model, we are now ready to make predictions on the future time points. We can also visualize the trends to cross      validate if the model works fine
+```{r}
+# fit an ARIMA model and predict the future 10 years
+pred <- predict(fit, n.ahead = 10*12)
+
+# visualize the prediction along with the training data
+ts.plot(AirPassengers,2.718^pred$pred, log = "y", lty = c(1,3))
+```
+
