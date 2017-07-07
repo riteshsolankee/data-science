@@ -20,7 +20,6 @@ When you click the **Knit** button a document will be generated that includes bo
 library(dplyr)
 library(VIM)
 library(ggplot2)
-library(plotly)
 library(caret)
 library(pROC)
 ```
@@ -96,5 +95,82 @@ beanplot(insurance.res[,c("tiv_2015", "tiv_2016")])
 beanplot(insurance.comm[,c("tiv_2015", "tiv_2016")])
 beanplot(insurance[,c("tiv_2015", "tiv_2016")])
 
+```
+## 1.	If there is  any difference in the total insured value for year 2015 and 2016
+```{r}
+summary(insurance.data$tiv_2015)
+summary(insurance.data$tiv_2016)
+range(insurance.data$tiv_2015)
+range(insurance.data$tiv_2016)
+for(x in c("tiv_2015", "tiv_2016")){
+  
+  boxplot(insurance[,x], horizontal=TRUE, main=x)
+}
+
+# Histogram
+for(x in c("tiv_2015", "tiv_2016")){
+  hist(insurance[,x], breaks=100, main = x)
+}
+## Yes, there is a difference between total insurared value in 2015 qne 2016
+# - The total insured value was spread on higher range in 2015 then 2016
+```
+
+## 2.	If there is any difference in total insured value for year 2016 for commercial and residential properties .
+```{r}
+summary(insurance.comm$tiv_2016)
+summary(insurance.res$tiv_2016)
+
+# Density plot
+for(x in c( "tiv_2016")){
+  d1 <- density(insurance.res[, x])
+    plot(d1, type="n", main=x)
+    polygon(d1, col="red", border="gray")
+  
+  d2 <- density(insurance.comm[, x])
+    plot(d2, type="n", main=x)
+    polygon(d2, col="red", border="gray")
+
+ 
+}
+
+## Yes, insured value is very high in commercial properties. 
+## Higher number of insurance less than 500000 in Resendential 
+```
+
+##3.	If there is any difference in total insured value for year 2015 and year 2016 for commercial and residential properties
+```{r}
+summary(insurance.comm$tiv_2015)
+summary(insurance.res$tiv_2015)
+summary(insurance.comm$tiv_2016)
+summary(insurance.res$tiv_2016)
+
+# Density plot
+for(x in c( "tiv_2015")){
+  d1 <- density(insurance.res[, x])
+    plot(d1, type="n", main=x)
+    polygon(d1, col="red", border="gray")
+  
+  d2 <- density(insurance.comm[, x])
+    plot(d2, type="n", main=x)
+    polygon(d2, col="red", border="gray")
+
+ 
+}
+
+# Density plot
+for(x in c( "tiv_2016")){
+  d1 <- density(insurance.res[, x])
+    plot(d1, type="n", main=x)
+    polygon(d1, col="red", border="gray")
+  
+  d2 <- density(insurance.comm[, x])
+    plot(d2, type="n", main=x)
+    polygon(d2, col="red", border="gray")
+
+ 
+}
+
+## Insured value pattern for residential is almost constant for 2015 and 1016 years
+## But, there is a significant change in the commercial properties. Lower insurance value was higher in 2015 which went down in 2016
 ```
 
