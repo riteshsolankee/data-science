@@ -231,3 +231,4 @@ pred <- predict(fit, n.ahead = 10*12)
 ts.plot(AirPassengers,2.718^pred$pred, log = "y", lty = c(1,3))
 ```
 
+### Note: ARIMA models can be also specified through a seasonal structure. In this case, the model is specified by two sets of order parameters: (p, d, q) as described above and $(P, D, Q)_m$ parameters describing the seasonal component of m periods.
