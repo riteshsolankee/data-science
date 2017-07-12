@@ -1,0 +1,57 @@
+---
+title: "TF-IDF Calculation"
+author: "Ritesh Kumar"
+date: "7/12/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+### Deleting all variables
+```{r Clear workspace}
+rm(list=ls())
+```
+
+## Load libraries
+```{r }
+library(tm)
+```
+
+## TF Term Frequency
+```{r}
+
+## Read CSV File 
+iphoneTag <- read.csv("data/iphoneTFIDF.csv")
+
+doc_corpus <- Corpus( VectorSource(iphoneTag$Text) )
+control_list <- list(removePunctuation = TRUE, stopwords = TRUE, tolower = TRUE)
+tdm <- TermDocumentMatrix(doc_corpus, control = control_list)
+
+# print
+( tf <- as.matrix(tdm) )
+```
+
+## IDF Inverse Document Frequency
+```{r}
+# idf
+( idf <- log( ncol(tf) / ( 1 + rowSums(tf != 0) ) ) )
+
+# diagonal matrix
+( idf <- diag(idf) )
+
+tf_idf <- crossprod(tf, idf)
+colnames(tf_idf) <- rownames(tf)
+tf_idf
+
+# Note that normalization is computed "row-wise"
+(tf_idf / sqrt( rowSums( tf_idf^2 ) ))
+```
+
