@@ -15,9 +15,8 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ## Load data
 ```{r}
-setwd("/Users/ritesh/pad-datascience/R/")
 icr <- read.csv(
-  "bankingAnalytics/data/Interest Coverage Ratio.csv",
+  "data/Interest Coverage Ratio.csv",
   sep =",",
   header = TRUE, 
   stringsAsFactors = FALSE)

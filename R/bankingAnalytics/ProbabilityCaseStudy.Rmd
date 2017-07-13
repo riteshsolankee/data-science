@@ -20,11 +20,10 @@ library(LaplacesDemon)
 ```
 
 ```{r}
-setwd("/Users/ritesh/pad-datascience/R/")
 
 credit.card <- 
   read.csv(
-    "bankingAnalytics/data/cobrand credit card .csv", 
+    "data/cobrand credit card .csv", 
     sep =",", 
     header = TRUE, 
     stringsAsFactors = FALSE)
@@ -59,7 +58,7 @@ d$Spends<- as.factor(d$Spends)
 d$Fraud<- as.factor(d$Fraud)
 d$Type.of.swipe<- as.factor(d$Type.of.swipe)
 
-# ggplot(d,aes(x=Spends.band,y=Spends))+ geom_boxplot()
+ggplot(d,aes(x=Spends.band,y=Spends))+ geom_boxplot()
 
 
 ```
@@ -94,7 +93,7 @@ data1
 #spend band 1  faud 0.001
 #over all 0.001
 
-card2<- credit.card[which(credit.card$Spends.band==2),]
+card2 <- credit.card[which(credit.card$Spends.band==2),]
 dim(card2)
 
 mytable4<- table(card2$Fraud)
@@ -127,12 +126,3 @@ data3
 
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

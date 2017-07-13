@@ -17,18 +17,20 @@ When you click the **Knit** button a document will be generated that includes bo
 ```{r clear workspace}
 rm(list=ls())
 ```
+
 ## Load libraries
 ```{r Load}
 library(caret)
 library(VIM)
 library(ggplot2)
+library(pROC)
 ```
+
 ## Read data
 ```{r}
-setwd("/Users/ritesh/pad-datascience/R/")
 
 ### Load data and intial analysis
-fraud <- read.csv("bankingAnalytics/data/Fraud prediction.csv", stringsAsFactors = F)
+fraud <- read.csv("data/Fraud prediction.csv", stringsAsFactors = F)
 
 head(fraud)
 ```
@@ -39,8 +41,8 @@ summary(fraud)
 
 # 20% of age vars has missing  vals, remove it
 fraud$Age <- NULL
-# drop name; chagne sex to dummay variable; change marital status
-# Remove primaru key like columns
+# drop name; change sex to dummay variable; change marital status to dummy variable
+# Remove primary key like columns
 fraud$Name <- NULL
 xtabs(~fraud$Sex)
 
@@ -58,21 +60,21 @@ fraud$Sex <- NULL
 fraud$MaritalStatus <- NULL
 
 str(fraud)
+```
 
-#C - I want to create a 25% sample for validation - called testing datasest
-
+## C - I want to create a 25% sample for validation - called testing datasest
+```{r }
 smp_size <- floor(0.75 * nrow(fraud))
 set.seed(123)
 
 train_ind <- sample(seq_len(nrow(fraud)), size = smp_size)
-
 train <- fraud[train_ind,]
 test <- fraud[-train_ind,]
 
 # check count 0f 0 -1 in test data for  the Y variable Fraud
 xtabs(~test$Fraud)
 
-# move the fraud = 0 145 row into a new dataset and creaed 78 obs sample
+# move the fraud = 0, i.e, 145 rows into a new dataset and creaed 78 obs sample
 
 newtest1 <- test[which(test$Fraud==0), ]
 dim(newtest1)
@@ -85,8 +87,87 @@ smp_size <- floor(0.54 * nrow(newtest1))
 set.seed(123)
 train_ind <- sample(seq_len(nrow(newtest1)), size = smp_size)
 
+newtest1.1<- newtest1[train_ind,]
+newtest1.2 <- newtest1[-train_ind,]
 
+dim(newtest1.1)
+dim(newtest1.2)
+
+
+test_final <- rbind(newtest2,newtest1.1)
+
+xtabs(~test_final$Fraud)
+dim(test_final)
+str(test_final)
+# test_final$Fraud <- as.factor(test_final$Fraud)
+```
+
+
+## Visualize data and identfy it it have significant outlier 
+```{r }
+
+p <- ggplot(test_final, aes(factor(test_final$Fraud),test_final$NumLoanProducts))
+p + geom_boxplot()
+xtabs(~test_final$Fraud + test_final$NumLoanProducts)
+## Observe some outlier, but part of valid data so keep it
+
+p <- ggplot(test_final, aes(factor(test_final$Fraud),test_final$NumLiabilitiesProduct))
+p + geom_boxplot()
+xtabs(~test_final$Fraud + test_final$NumLiabilitiesProduct)
+## Observe some outlier, but part of valid data so keep it
+```
+
+## Analyze Data - I
+```{r}
+mylogit <- glm(test_final$Fraud ~ test_final$NumYearsInSystem + 
+                test_final$NumLoanProducts +
+                test_final$NumLiabilitiesProduct +
+                test_final$CTC + 
+                test_final$male +
+                test_final$single +
+                test_final$Couple, data = test_final, family = "binomial")
+
+summary(mylogit)
+## Check the  significance variable 
+anova(mylogit, test="Chisq")
+```
+
+## Backword Selection
+```{r }
+## Backward selection
+backward_mylogit <- step(mylogit, direction = "backward")
+summary(backward_mylogit)
+## Check significant variable through Anova
+anova(backward_mylogit, test="Chisq")
+```
+
+## Farward Selection
+```{r}
+forward_mylogit <- step(mylogit, direction = "forward")
+summary(forward_mylogit)
+## Check the significant variable through Anova
+anova(forward_mylogit, test="Chisq")
+```
+
+## Predictions 
+```{r}
+test_final$full <- predict(mylogit, test_final, type="response")
+names(test_final)
+
+test_final$backward <- predict(backward_mylogit, test_final, type = "response")
+names(test_final)
+
+test_final$forward <- predict(forward_mylogit, test_final, type = "response")
+names(test_final)
 
 ```
 
-## Including Plots
+## Accuracy calculation and validation
+```{r}
+auc(test_final$Fraud, test_final$full)
+auc(test_final$Fraud, test_final$backward)
+auc(test_final$Fraud, test_final$forward)
+
+```
+
+

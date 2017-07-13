@@ -21,15 +21,15 @@ rm(list=ls())
 library(readxl)
 library(VIM)
 library(ggplot2)
+library(psych)
 library(reshape)
 ```
 
 ## Set the working directory & Load data and intial analysis
 ```{r}
-setwd("/Users/ritesh/pad-datascience/R/")
 
 ### Load data and intial analysis
-risk_data <- read_excel("bankingAnalytics/data/DelinquentAmount.xlsx")
+risk_data <- read_excel("data/DelinquentAmount.xlsx")
 dim(risk_data)
 head(risk_data)
 class(risk_data$AmountDelinquent)
@@ -89,8 +89,11 @@ head(r3.m)
 library(ggplot2)
 
 ggplot(data = r3.m, aes(x=LoanStatus, y=value)) + 
-  geom_boxplot(aes(fill = LoanStatus))
+  geom_boxplot(aes(fill = LoanStatus)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(legend.position = "bottom", legend.direction = "horizontal")
 ```
+
 ## Analyze
 ```{r}
 # show error
@@ -120,7 +123,7 @@ risk$LoanStatus1 <- ifelse(risk$LoanStatus == "Current","Current","Defaulted")
 table(risk$LoanStatus1)
 
 
-library(psych)
+
 # describeBy(risk$AmountDelinquent, group=risk$LoanStatus, mat= TRUE, type=3,digits=7)
 
 describeBy(risk$AmountDelinquent, group=risk$LoanStatus1, mat= TRUE, type=3,digits=7)

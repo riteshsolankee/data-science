@@ -23,14 +23,14 @@ library(readxl)
 library(VIM)
 library(ggplot2)
 library(reshape)
+library(Hmisc)
 ```
 
 ## Set the working directory & Load data and intial analysis
 ```{r}
-setwd("/Users/ritesh/pad-datascience/R/")
 
 ### Load data and intial analysis
-ratio <- read.csv("bankingAnalytics/data/ratio.csv")
+ratio <- read.csv("data/ratio.csv")
 dim(ratio)
 head(ratio)
 summary(ratio)
@@ -42,52 +42,45 @@ ratio.matrix <- as.matrix(ratio)
 ```{r}
 rowSums(is.na(ratio))
 
-xx <- ratio[rowSums(is.na(ratio)) < 29, ]
-rowSums(is.na(data.frame(xx)))
-dim(xx)
-summary(xx)
+clean.ratio <- ratio[rowSums(is.na(ratio)) < 29, ]
+rowSums(is.na(data.frame(clean.ratio)))
+dim(clean.ratio)
+summary(clean.ratio)
 
-aggr(xx, prop =F , numbers = T )
-aggr(xx, prop =T , numbers = T )
+aggr(clean.ratio, prop =F , numbers = T )
+aggr(clean.ratio, prop =T , numbers = T )
 
-yy <- xx[, colSums(is.na(xx)) < 13]
+clean.ratio <- clean.ratio[, colSums(is.na(clean.ratio)) < 13]
 
-dim(yy)
-aggr(yy, prop =F , numbers = T )
-aggr(yy, prop =T , numbers = T )
+dim(clean.ratio)
+aggr(clean.ratio, prop =F , numbers = T )
+aggr(clean.ratio, prop =T , numbers = T )
 
-plot(density(yy$Sum.of.Market.Cap..in.US...))
-sd <- sd(yy$Sum.of.Market.Cap..in.US...)
-m <- mean(yy$Sum.of.Market.Cap..in.US...)
+## 
+## Steps - 1
+plot(density(clean.ratio$Sum.of.Market.Cap..in.US...))
+sd <- sd(clean.ratio$Sum.of.Market.Cap..in.US...)
+m <- mean(clean.ratio$Sum.of.Market.Cap..in.US...)
 
 val <- m + 3*sd
 val
 
-yy <- yy[which(yy$Sum.of.Market.Cap..in.US... < val), ]
-dim(yy)
-tmp_yy <- yy
-yy[is.na(yy)] <- 0
+clean.ratio <- clean.ratio[which(clean.ratio$Sum.of.Market.Cap..in.US... < val), ]
+dim(clean.ratio)
+## Repeat fron step1 untill row size stop decreasing.
 
-aggr(yy, prop =F , numbers = T )
+clean.ratio.tmp <- clean.ratio
+clean.ratio[is.na(clean.ratio)] <- 0
 
-yy <- yy[3:ncol(yy)]
-View(yy)
-dim(yy)
+aggr(clean.ratio, prop =F , numbers = T )
+
+clean.ratio <- clean.ratio[3:ncol(clean.ratio)]
+#View(yy)
+dim(clean.ratio)
 ```
-## Multivarite regression
+## Find top n heighly correlated attributes
 ```{r}
-cor(yy,method="pearson")
-
-library(Hmisc)
-correlations <- rcorr(as.matrix(yy))
-
-correlations$P
-
-```
-
-```{r}
-mosthighlycorrelated <- function(mydataframe,numtoreport, output)
-  {
+mosthighlycorrelated <- function(mydataframe,numtoreport, output){
      # find the correlations
      cormatrix <- cor(mydataframe)
      # set the correlations on the diagonal or lower triangle to zero,
@@ -96,18 +89,67 @@ mosthighlycorrelated <- function(mydataframe,numtoreport, output)
      cormatrix[lower.tri(cormatrix)] <- 0
      # flatten the matrix into a dataframe for easy sorting
      fm <- as.data.frame(as.table(cormatrix))
+
      # assign human-friendly names
      names(fm) <- c("First.Variable", "Second.Variable","Correlation")
      # sort and print the top n correlations
      
      df <- fm[order(abs(fm$Correlation),decreasing=T),]
      df$Correlation <- abs(df$Correlation)
-     # df <- df [df$Second.Variable == "Sum.of.Market.Cap..in.US...", ]
-     # head(fm[order(abs(fm$Correlation),decreasing=T),],n=numtoreport)
-     df
+    
+     df <- df [df$First.Variable == "Sum.of.Market.Cap..in.US...", ]
+     
+    head(df,n=numtoreport)
 }
 
-attr <- mosthighlycorrelated(yy, 10, "Sum.of.Market.Cap..in.US...")
-View(attr)
+attr <- mosthighlycorrelated(clean.ratio, 10, "Sum.of.Market.Cap..in.US...")
+# View(attr)
+class(attr$Second.Variable)
+
 ```
+
+## Multivarite regression
+```{r}
+cor(clean.ratio)
+
+correlations <- rcorr(as.matrix(clean.ratio))
+
+correlations$P
+
+
+#######
+# fit1<- lm(Sum.of.Market.Cap..in.US...~ Sum.of.Firm.Value..in.US...
+#           + Sum.of.Enterprise.Value..in.US...
+#           + Sum.of.Total.Debt.incl.leases..in.US...
+#           + Sum.of.Cash
+#           + Average.of.Return.on.Equity
+#           + Aggregate.ROE
+#           + Average.of.Effective.Tax.Rate
+#           + Average.of...held.by.institutions
+#           , data=clean.ratio)
+fit1 <- lm(Sum.of.Market.Cap..in.US... ~ ., 
+           data = subset(clean.ratio, 
+                         select = c("Sum.of.Market.Cap..in.US...", as.character(attr$Second.Variable))
+                         )
+           )
+fit1
+summary(fit1)
+# summary check for Pr(>|t|) column and which has very less P values consider those columns and run the model again 
+# that wll give high results
+# p value less than .05 says those variables are significant
+fit1<- lm(Sum.of.Market.Cap..in.US...~Sum.of.Firm.Value..in.US...
+          + Sum.of.Total.Debt.incl.leases..in.US...
+          , data=clean.ratio)
+fit1
+summary(fit1)
+coefficients(fit1)
+fitted(fit1)
+residuals(fit1)
+
+
+par(mfrow=c(2,2))
+plot(fit1)
+```
+
+
 

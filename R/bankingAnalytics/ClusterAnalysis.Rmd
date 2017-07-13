@@ -1,0 +1,73 @@
+---
+title: "Banking Cluster Analysis"
+author: "Ritesh Kumar"
+date: "7/13/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Clear environment and  Load Libraries
+```{r }
+rm(list=ls())
+library(dendextend)
+library(colorspace)
+library(circlize)
+```
+
+## Load data
+```{r}
+cluster <- read.csv("data/cluster.csv", sep =",",header = TRUE, stringsAsFactors = FALSE)
+
+str(cluster)
+summary(cluster)
+
+table(cluster$Type.of.cust)
+```
+
+## Feature engineering  
+```{r}
+## Convert 'Type.of.cust' to integer value 
+cluster$Type.of.cust <- as.integer(as.factor(cluster$Type.of.cust))
+```
+
+## Clustering
+```{r}
+d.tenure<-dist(cluster,method="euclidean")
+class(d.tenure)
+
+hc_tenure<- hclust(d.tenure,method="complete")
+
+
+cust_type<- rev(levels(as.factor(cluster$Type.of.cust)))
+
+dend<- as.dendrogram(hc_tenure)
+dend<- set(dend,"labels_cex", .5)
+plot(dend,main="Original tree")
+
+dend<- color_branches(dend,k=3,groupLables=cust_type)
+plot(dend)
+
+dend<- as.dendrogram(hc_tenure)
+
+clusterCut<- cutree(hc_tenure,3)
+table(clusterCut,cluster$Type.of.cust)  
+
+clusterCut4<- cutree(hc_tenure,4)
+table(clusterCut4,cluster$Type.of.cust)  
+
+
+plot(hc_tenure)
+groups<-cutree(hc_tenure,k=4)
+groups
+
+```
+

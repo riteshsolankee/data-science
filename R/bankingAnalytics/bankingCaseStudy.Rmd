@@ -24,10 +24,9 @@ library(ggplot2)
 ```
 ## Read data
 ```{r}
-setwd("/Users/ritesh/pad-datascience/R/")
 
 ### Load data and intial analysis
-data <- read.csv("bankingAnalytics/data/Electronic Funds transfer data_volume.csv", stringsAsFactors = F)
+data <- read.csv("data/Electronic Funds transfer data_volume.csv", stringsAsFactors = F)
 # D - define - What can be expected valolume for different claen methods available from the electronic payment Systems
 # c- not required as 1 dataset
 head(data)
@@ -79,7 +78,7 @@ outliers <- findOutliers(data2)
 outliers
 
 # The data shows a lot of variation, hence so many are getting labbelled as outliers as per normal distribution
-# We will consider that the data is not normal and go ahead to understand descroptive statistics
+# We will consider that the data is not normal and go ahead to understand descriptive statistics
 
 ## Summary
 summary(outliers)
@@ -98,12 +97,3 @@ plot(density(data1$NEFTvolume))
 ```
 
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure) 
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
