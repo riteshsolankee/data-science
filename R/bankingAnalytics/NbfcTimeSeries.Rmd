@@ -30,10 +30,9 @@ library(forecast)
 ```
 ## Set the working directory & Load data and intial analysis
 ```{r}
-setwd("/Users/ritesh/pad-datascience/R/")
 
 ### Load data and intial analysis
-tsRate <- read.csv("bankingAnalytics/data/tsDataNBFC.csv")
+tsRate <- read.csv("data/tsDataNBFC.csv")
 dim(tsRate)
 head(tsRate)
 summary(tsRate)

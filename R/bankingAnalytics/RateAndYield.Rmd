@@ -26,10 +26,9 @@ library(ggplot2)
 
 ## Set the working directory & Load data and intial analysis
 ```{r}
-setwd("/Users/ritesh/pad-datascience/R/")
 
 ### Load data and intial analysis
-data <- read_excel("bankingAnalytics/data/RateAndYield.xlsx")
+data <- read_excel("data/RateAndYield.xlsx")
 
 ## check data
 dim(data)
