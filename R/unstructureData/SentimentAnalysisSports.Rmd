@@ -42,7 +42,7 @@ library(ggplot2)
 
 ## Twitter set-up
 ```{r}
-serchHashtagTwitter <- function(hashtag.list, tweet.Count) {
+serchHashtagTwitter <- function(hashtag, tweet.Count) {
   api_key <- "XXXXXXX"
   api_secret <- "XXXXXXX"
   token <- "XXXX"
