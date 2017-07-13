@@ -34,7 +34,7 @@ library(stringi)
 library(stringr)
 library(wordcloud)
 library(ggplot2)
-library(plotly)
+# library(plotly)
 library(SnowballC) ## Snowball stemmers based on the C libstemmer UTF-8 library
 library(corrplot)
 library(heatmaply) ## For drawing dendrogram along with correlation
@@ -45,7 +45,7 @@ library(heatmaply) ## For drawing dendrogram along with correlation
 ```{r}
 modi.tweets <- 
   read.csv(
-    "/Users/ritesh/pad-datascience/R/unstructureData/data/narendramodi_tweets.csv",
+    "data/narendramodi_tweets.csv",
     stringsAsFactors = F)
 
 ## Convert the text column to character
@@ -79,7 +79,7 @@ modi.tweets.plot <-
 
 ## dynamic plot
 ```{r}
-ggplotly(modi.tweets.plot)
+# ggplotly(modi.tweets.plot)
 ```
 
 ## Static plot
@@ -174,24 +174,17 @@ hashtag.dtm <- DocumentTermMatrix(hashtag_tweet_corpus)
 hashtags.dtm.df <- data.frame(as.matrix(hashtag.dtm))
 
 ## Filter out first top 10 words (most frequently )
-top10.df <- data.frame(rowSums(as.matrix(hashtag.tdm)[setdiff(rownames(as.matrix(hashtag.tdm)),c("character")),]))
-names(top10.df) <- 'count'
-top10.df$hashtags <- rownames(top10.df)
+top.hashtags <- setdiff(findFreqTerms(hashtag.tdm, 11), c("character"))
 
-top10.df <- top10.df %>% arrange(-count)
-top10.df <- head(top10.df,10)
-top.hashtags <- top10.df$hashtags
-top.hashtags
 ```
 
 ## Part - A
 Use corrplot to show the correlations
 ```{r}
 
-hashtags.tdm.df.10 <- hashtags.dtm.df[, top.hashtags]
-# hashtags.tdm.df.10
+hashtags.dtm.df.10 <- hashtags.dtm.df[, top.hashtags]
 
-cor_hashtags <- cor(hashtags.tdm.df.10)
+cor_hashtags <- cor(hashtags.dtm.df.10)
 corrplot(cor_hashtags,method="ellipse" )
 corrplot.mixed(cor_hashtags)
 

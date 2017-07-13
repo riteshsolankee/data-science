@@ -22,8 +22,6 @@ rm(list=ls())
 ## Install and load libraries
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
-library(rJava)
-library(RMongo)
 library(twitteR)
 library(ROAuth)
 library(httr)
@@ -62,7 +60,7 @@ serchHashtagTwitter <- function(hashtag, tweet.count) {
 tweet.gst <- serchHashtagTwitter('#GST', 5000)
 head(tweet.gst)
 dim(tweet.gst)
-# write.csv(tweet.gst, file = "data/gst_tweet.csv")
+write.csv(tweet.gst, file = "data/gst_tweet1.csv")
 RSentiment::calculate_sentiment("I love my apple")
 RSentiment::calculate_sentiment("I hate my apple")
 
@@ -70,10 +68,10 @@ tweet.gst$text_transformed <- gsub("[^A-Za-z0-9///'/#/_ ]", " ", tweet.gst$text)
 tweet.gst$sentiment <- RSentiment::calculate_score(tweet.gst$text_transformed)
 table(tweet.gst$sentiment)
 
-tweet.gst.100 <- head(tweet.gst, 1000)
-tweet.gst.100$sentiment <- RSentiment::calculate_sentiment(tweet.gst.100$text)
-
-View(tweet.gst.100)
+tweet.gst.100 <- head(tweet.gst, 100)
+tweet.gst.100$sentiment_100 <- RSentiment::calculate_sentiment(tweet.gst.100$text)
+table(tweet.gst.100$sentiment)
+# View(tweet.gst.100)
 
 positive.words <- scan("data/positive-words.txt", 
                        what="character",
@@ -83,10 +81,6 @@ negative.words <- scan("data/negative-words.txt",
                        comment.char = ";")
 
 class(positive.words)
-
-
-
-
 
 ```
 ```{r}
@@ -112,12 +106,20 @@ sentence_polarity_count <- function(sentence, pos.words, neg.words){
   polarity <- pos.count - neg.count
 }
 
-tweet.gst.100$sentiment1 <- lapply(tweet.gst.100$text, sentence_polarity, positive.words,negative.words)
-tweet.gst.100$polarity <- lapply(tweet.gst.100$text, sentence_polarity_count, positive.words,negative.words)
+tweet.gst.100$sentiment_100 <- lapply(tweet.gst.100$text, sentence_polarity, positive.words,negative.words)
+tweet.gst.100$polarity_100 <- lapply(tweet.gst.100$text, sentence_polarity_count, positive.words,negative.words)
 View(tweet.gst.100)
 
-table(unlist(tweet.gst.100$sentiment1))
-table(unlist(tweet.gst.100$polarity))
+table(unlist(tweet.gst.100$sentiment_100))
+table(unlist(tweet.gst.100$polarity_100))
+
+
+tweet.gst$sentiment_custom <- lapply(tweet.gst$text, sentence_polarity, positive.words,negative.words)
+tweet.gst$polarity_custom <- lapply(tweet.gst$text, sentence_polarity_count, positive.words,negative.words)
+# View(tweet.gst)
+
+table(unlist(tweet.gst$sentiment_custom))
+table(unlist(tweet.gst$polarity_custom))
 
 tweets_senti <- select(tweet.gst, subset=c('text', 'sentiment'))
 View(tweets_senti)

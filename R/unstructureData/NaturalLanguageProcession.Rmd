@@ -22,33 +22,49 @@ rm(list=ls())
 
 ## Install and load libraries
 ```{r, message=FALSE, warning=FALSE}
-library(dplyr)
-library(twitteR)
-library(ROAuth)
-library(httr)
-library(base64enc)
-library(httk)
-library(RCurl)
-library(jsonlite)
 library(RSentiment)
-library(stringi)
-library(stringr)
 library(NLP)
 library(openNLP)
-library(maxent)
-library(sringr)
-library(stringi)
+#library(maxent)
 ```
 
 ## Parts of speech
 ```{r}
-sent <- "This is a sample sentance for parts of speech !!. This is @Wow :-)"
-sent <- as.String(sent)
-# sentAnnotator <- Maxent_Sent_Token_Annotator()
-annotate_sent <- annotate(sent, Maxent_Sent_Token_Annotator())
-(wordAnnotator <- annotate(s = sent, f = Maxent_Word_Token_Annotator(probs = T), a = annotate_sent))
+bio <- readLines("data/nlpText.txt")
 
-(posAnnotator <- annotate(s = sent, f = Maxent_POS_Tag_Annotator(probs = T), a = wordAnnotator))
+bio <- paste(bio, collapse = " ")
+print(bio)
 
+# For many kinds of text processing it is sufficient, even preferable to use base R classes. 
+# But for NLP we are obligated to use the String class. We need to convert our bio variable to a string.
+bio <- as.String(bio)
 
 ```
+
+
+## Sentence and Word Annotations
+### Now that we have the file loaded, we can begin to turn it into words and sentences. This is a prerequisite for any other kind of        natural language processing, because those kinds of NLP actions will need to know where the words and sentences are. First we load      the necessary libraries.
+
+```{r}
+
+# Next we need to create annotators for words and sentences. Annotators are created by functions which load the underlying Java           libraries. These functions then mark the places in the string where words and sentences start and end. The annotation functions are     themselves created by functions.
+
+word_ann <- Maxent_Word_Token_Annotator()
+sent_ann <- Maxent_Sent_Token_Annotator()
+
+# These annotators form a “pipeline” for annotating the text in our bio variable. First we have to determine where the sentences are,     then we can determine where the words are. We can apply these annotator functions to our data using the annotate() function.
+
+bio_annotations <- annotate(bio, list(sent_ann, word_ann)) ## Note sequence matters , first sentence then word annotation should come
+class(bio_annotations)
+
+bio_annotations
+# We can combine the biography and the annotations to create what the NLP package calls an AnnotatedPlainTextDocument. 
+
+bio_doc <- AnnotatedPlainTextDocument(bio, bio_annotations)
+# Now we can extract information from our document using accessor functions like sents() to get the sentences and words() to get the words. We could get just the plain text with as.character(bio_doc).
+sents(bio_doc) %>% head(2)
+words(bio_doc) %>% head(10)
+
+as.character(bio_doc)
+```
+

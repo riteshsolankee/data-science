@@ -32,7 +32,7 @@ library(stringi)
 library(stringr)
 library(wordcloud)
 library(ggplot2)
-library(plotly)
+# library(plotly)
 library(twitteR)
 library(ROAuth)
 library(httr)
@@ -146,22 +146,17 @@ class(tweets_user)
 top_10 <- head(tweets_user, 10)
 top_10
 ```
+
 ## Part - C
 Create a new column in the data itself, to identity total number of hashtags in each tweet
 ```{r}
-## Helper function for searching a pattern from a string
-strcount <- function(x, pattern, split){
-  unlist(lapply(
-    strsplit(x, split),
-       function(z) na.omit(length(grep(pattern, z)))
-   ))
-}
 
 ## Create new column 'hashTagCount' containg the count of hastags corresponding to each tweet
 df.data.science.tweet$hashTagCount <- 
-  lapply(df.data.science.tweet$text_transformed, FUN = function(x2) strcount(x2, "#\\S+", " "))
+  lapply(df.data.science.tweet$text_transformed, FUN = function(x2) sum(str_count(x2,"#(\\d|\\w)+")))
 
- #unique(df.data.science.tweet$hashTagCount)
+# unique(df.data.science.tweet$hashTagCount)
+
 ```
 ## Part - D
 Identity those users who have used #datascience as well as #machinelearning. Plot a bar chart top 10 users based on their count
@@ -169,12 +164,12 @@ Identity those users who have used #datascience as well as #machinelearning. Plo
 df.data.science.tweet$mlHashTagCount <- 
   lapply(
     df.data.science.tweet$text_transformed,
-    FUN = function(x2) strcount(x2, "#machinelearning", " "))
+    FUN = function(x2) sum(str_count(x2, "#machinelearning")))
 
 df.data.science.tweet$dsHashTagCount <- 
   lapply(
     df.data.science.tweet$text_transformed,
-    FUN = function(x2) strcount(x2, "#datascience", " "))
+    FUN = function(x2) sum(str_count(x2, "#datascience")))
 
 df.data.science.tweet$dsHashTagCount <- as.numeric(df.data.science.tweet$dsHashTagCount)
 df.data.science.tweet$mlHashTagCount <- as.numeric(df.data.science.tweet$mlHashTagCount)
@@ -205,7 +200,7 @@ bar_chart_tweet_count <-
   ggtitle("Users Vs Tweet Count", subtitle="Users Vs Tweet Count") + 
   xlab("\nMonth - Year") + 
   ylab("\nTweet Count")
-ggplotly(bar_chart_tweet_count)
+# ggplotly(bar_chart_tweet_count)
 plot(bar_chart_tweet_count)
 ```
 
@@ -218,7 +213,7 @@ Scrape tweets from @narendramodi and do the following<br></br>
 ```{r}
 modi.tweets <- 
   read.csv(
-    "/Users/ritesh/pad-datascience/R/unstructureData/data/narendramodi_tweets.csv",
+    "data/narendramodi_tweets.csv",
     stringsAsFactors = F)
 
 ## Convert the text column to character
@@ -275,7 +270,7 @@ quarterly.GrpWord.List$words <-
   lapply(lapply(quarterly.GrpWord.List$words, unlist), FUN = function(x2) x2[grepl('#\\S+', as.character(x2))])
 
 ## Convert the quarter column type from 'yearqtr' to 'character'
-class(quarterly.GrpWord.List$qtr)
+# class(quarterly.GrpWord.List$qtr)
 quarterly.GrpWord.List$qtr <- as.character(quarterly.GrpWord.List$qtr)
 
 ## Create a matrix of dataframe containing words and with its count for each quarter 
@@ -306,5 +301,3 @@ bar_chart_qtr_tweet_count <-
 plot(bar_chart_qtr_tweet_count)
 ```
 
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

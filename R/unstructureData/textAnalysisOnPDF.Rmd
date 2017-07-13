@@ -17,7 +17,9 @@ When you click the **Knit** button a document will be generated that includes bo
 rm(list=ls())
 library(pdftools)
 library(wordcloud)
-pdf <- "/Users/ritesh/pad-datascience/R/unstructureData/data/2_States_The_Story_of_My_Marriage - Chetan_Bhagat.pdf"
+library(corrplot)
+
+pdf <- "data/2_States_The_Story_of_My_Marriage - Chetan_Bhagat.pdf"
 book_text <- pdf_text(pdf) 
 class(book_text)
 

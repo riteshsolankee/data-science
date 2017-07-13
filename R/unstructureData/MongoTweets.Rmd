@@ -22,7 +22,6 @@ rm(list=ls())
 ## Install and load libraries
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
-library(rJava)
 library(RMongo)
 library(twitteR)
 library(ROAuth)

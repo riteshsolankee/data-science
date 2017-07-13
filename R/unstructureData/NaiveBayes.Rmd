@@ -22,6 +22,7 @@ rm(list=ls())
 
 ## Install and load libraries
 ```{r, message=FALSE, warning=FALSE}
+library(dplyr)
 library(e1071)
 library(tm)
 ```
@@ -89,8 +90,12 @@ lab.train <- lab[1:250, 'label']
 lab.test <- lab[251:299, 'label']
 
 lab.test
-
 lab.train <- as.factor(lab.train)
+
+```
+
+## Naive Bayes
+```{r}
 model <- naiveBayes(dtm.train.nb.df, lab.train)
 
 pred <- predict(model, newdata = dtm.test.nb.df) 
@@ -99,10 +104,5 @@ table(pred, lab.test)
 
 View(dtm.train.nb.df)
 View(dtm.test.nb.df)
-```
-
-## Naive Bayes
-```{r}
-
 ```
 
