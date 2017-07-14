@@ -13,6 +13,11 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
+## Problem Statement:
+### Bank has information on the spred based on hte range of interest coverage ratio and rating 
+#### 1. Check if the mean of Interest Coverage Ratio for Large Manufacturing firm is similar to Financial Service Firm
+#### 2. Check if the mean of Interest Coverage Ratio for Large manufacturing firm is similar to Financial service Firm and Smaller and riskier Firm 
+
 ## Load data
 ```{r}
 icr <- read.csv(
@@ -26,6 +31,12 @@ str(icr)
 ```
 ## Data exploration
 ```{r}
+## Check for missing value 
+nrow(icr[!complete.cases(icr), ])
+# No missing values
+
+
+## Checl for Outliers 
 boxplot(icr$LargeManufFirmGT)
 summary(icr$LargeManufFirmGT)
 
@@ -45,11 +56,20 @@ ggplot(icr,aes(x=LargeManufFirmGT,y=LargeManufFirmLT))+geom_point(shape=1)
 ```
 ## Analysis
 ```{r}
+## Run t-test to check if there is difference in rate from source-1 and source-2 
+## Formulate Hypothesis
+## - Null Hypothesis - Means of Interest Coverage Ratio for Large Manufacturing Firm is similar to Financial Service Firm
+## - Alternate Hypothesis - Mean of Interest Coverage Ratio is different
 t.test(icr$LargeManufFirmGT,icr$FinancialServiceFirmsGT)
 
 # p value is less than .05
 # so we should reject the 
 
+
+## Run Anova to check if there is difference in rates from different sources 
+## Formulate Hypothesis
+## Null Hypothesis - Mean of Interest Coverage Ratios of Large Manufacturing Firm, Financial Service Firm and Smaller and Riskier Firm are same
+## Alternate Hypothesis: Mean of Interest Coverage Ratio is different
 fit<- aov(icr$LargeManufFirmGT~icr$FinancialServiceFirmsGT+icr$SmallerAndRiskierFirmsGT)
 fit
 ```

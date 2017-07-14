@@ -13,6 +13,9 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
+## Problem Statement:
+### It has been decided to allow NBFCs, selectively, registered with RBI to issue co-branded creadit card with schedulded commercial bank. The data contains transactions made by co-branded of a popular NBFC in sep'16 by platinum cardholders. This dataset present transactions that occured in two days with fraud marked out under. The dataset is heighly unbalanced with very few FRAUD transactions. The manager wants to understand the conditional probability of he amount band and a transaction being a fraud.
+
 ## Load libraries
 ```{r}
 library(ggplot2)
