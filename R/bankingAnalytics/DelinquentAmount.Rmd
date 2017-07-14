@@ -12,6 +12,11 @@ knitr::opts_chunk$set(echo = TRUE)
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+# Problem statement:
+## A insurance company wants to know what is the likeliest values od default  amount
+
+
 ## Deleting all variables
 ```{r clear workspace}
 rm(list=ls())
@@ -124,8 +129,11 @@ table(risk$LoanStatus1)
 
 
 
-# describeBy(risk$AmountDelinquent, group=risk$LoanStatus, mat= TRUE, type=3,digits=7)
-
+# Report basic summary statistics by a grouping variable. Useful if the grouping variable is some experimental variable and data are to be aggregated for plotting.
+## Parameters details
+# mat	- provide a matrix output rather than a list
+# type - Which type of skew and kurtosis should be found
+# digits - When giving matrix output, how many digits should be reported
 describeBy(risk$AmountDelinquent, group=risk$LoanStatus1, mat= TRUE, type=3,digits=7)
 
 # conclusion using Chebychev's theorem
