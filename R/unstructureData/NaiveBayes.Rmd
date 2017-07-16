@@ -73,7 +73,6 @@ dtm.train.nb.df <-
   lapply(
     as.data.frame(as.matrix(dtm.train.nb)), 
     function(y){y[y == 0] <- "NO";y[y > 0 & y != "NO"] <- "YES"; y})
-
 dtm.test.nb.df <- 
   lapply(
     as.data.frame(as.matrix(dtm.test.nb)), 

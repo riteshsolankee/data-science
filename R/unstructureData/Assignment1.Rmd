@@ -153,23 +153,24 @@ Create a new column in the data itself, to identity total number of hashtags in 
 
 ## Create new column 'hashTagCount' containg the count of hastags corresponding to each tweet
 df.data.science.tweet$hashTagCount <- 
-  lapply(df.data.science.tweet$text_transformed, FUN = function(x2) sum(str_count(x2,"#(\\d|\\w)+")))
+  lapply(df.data.science.tweet$text_transformed, FUN = function(x2) str_count(x2,"#(\\d|\\w)+"))
 
 # unique(df.data.science.tweet$hashTagCount)
 
 ```
+
 ## Part - D
 Identity those users who have used #datascience as well as #machinelearning. Plot a bar chart top 10 users based on their count
 ```{r}
 df.data.science.tweet$mlHashTagCount <- 
   lapply(
     df.data.science.tweet$text_transformed,
-    FUN = function(x2) sum(str_count(x2, "#machinelearning")))
+    FUN = function(x2) str_count(x2, "#machinelearning"))
 
 df.data.science.tweet$dsHashTagCount <- 
   lapply(
     df.data.science.tweet$text_transformed,
-    FUN = function(x2) sum(str_count(x2, "#datascience")))
+    FUN = function(x2) str_count(x2, "#datascience"))
 
 df.data.science.tweet$dsHashTagCount <- as.numeric(df.data.science.tweet$dsHashTagCount)
 df.data.science.tweet$mlHashTagCount <- as.numeric(df.data.science.tweet$mlHashTagCount)

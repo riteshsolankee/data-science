@@ -49,12 +49,13 @@ bio <- as.String(bio)
 
 # Next we need to create annotators for words and sentences. Annotators are created by functions which load the underlying Java           libraries. These functions then mark the places in the string where words and sentences start and end. The annotation functions are     themselves created by functions.
 
-word_ann <- Maxent_Word_Token_Annotator()
-sent_ann <- Maxent_Sent_Token_Annotator()
+word_ann <- Maxent_Word_Token_Annotator(probs=T)
+sent_ann <- Maxent_Sent_Token_Annotator(probs=T)
+pos_ann <- Maxent_POS_Tag_Annotator(probs=T)
 
 # These annotators form a “pipeline” for annotating the text in our bio variable. First we have to determine where the sentences are,     then we can determine where the words are. We can apply these annotator functions to our data using the annotate() function.
 
-bio_annotations <- annotate(bio, list(sent_ann, word_ann)) ## Note sequence matters , first sentence then word annotation should come
+bio_annotations <- annotate(bio, list(sent_ann, word_ann, pos_ann)) ## Note sequence matters , first sentence then word annotation should come
 class(bio_annotations)
 
 bio_annotations
@@ -67,4 +68,16 @@ words(bio_doc) %>% head(10)
 
 as.character(bio_doc)
 ```
+
+## Print Pretty 
+```{r}
+x <- subset(bio_annotations, type == "word")
+class(x)
+
+tags <- sapply(x$features, "[[", "POS")
+class(tags)
+table(tags)
+sprintf("%s/%s", bio[x], tags)
+```
+
 

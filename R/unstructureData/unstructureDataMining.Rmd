@@ -61,7 +61,7 @@ stop_words <- c(stopwords(), custom_stop_words)
 ## Removing spaces
 freq_words_df_rm_st_wr <- freq_words_df_sort[freq_words_df_sort$splitWord != "",]
 ## stop_words
-freq_words_df_rm_st_wr <- freq_words_df_rm_st_wr[! freq_words_df_rm_st_wr$splitWord %in% stop_words,]
+freq_words_df_rm_st_wr <- freq_words_df_rm_st_wr[!freq_words_df_rm_st_wr$splitWord %in% stop_words,]
 freq_words_df_rm_st_wr
 ## ploting the dataframe using ggplot and plotly
 bar_chart <- 

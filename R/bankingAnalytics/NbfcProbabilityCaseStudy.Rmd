@@ -18,6 +18,7 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ## Load libraries
 ```{r}
+rm(list=ls())
 library(ggplot2)
 library(LaplacesDemon)
 ```
@@ -74,27 +75,29 @@ prop.table(mytable1)
 mytable<- table(credit.card$Spends.band)
 
 prop.table(mytable)
+```
 
-PrA<-c(.242,.758)
-PrA2<-c(.174,.827)
-PrA3<-c(0.585,.415)
+```{r }
+PrA1<-c(0.241, 0.758)
+PrA2<-c(0.174, 0.827)
+PrA3<-c(0.585, 0.415)
 card1<- credit.card[which(credit.card$Spends.band==1),]
 dim(card1)
 
 mytable3<- table(card1$Fraud)
 prop.table(mytable3)
 
-PrBA<- c(0.0032,.9968)
+PrBA1<- c(0.0032,.9968)
 
-
-data1<- BayesTheorem(PrA,PrBA)
-
+data1<- BayesTheorem(PrA1,PrBA1)
 str(data1)
-
 data1
-
-#spend band 1  faud 0.001
+#spend band 1  fraud 0.001
 #over all 0.001
+
+```
+
+```{r }
 
 card2 <- credit.card[which(credit.card$Spends.band==2),]
 dim(card2)
@@ -102,15 +105,15 @@ dim(card2)
 mytable4<- table(card2$Fraud)
 prop.table(mytable4)
 
-PrBA1<- c(0.0002,.9998)
+PrBA2<- c(0.0002,.9998)
 
-
-data2<- BayesTheorem(PrA2,PrBA1)
-
+data2<- BayesTheorem(PrA2,PrBA2)
 str(data2)
-
 data2
+```
 
+
+```{r }
 
 card3<- credit.card[which(credit.card$Spends.band==3),]
 dim(card3)
@@ -118,13 +121,10 @@ dim(card3)
 mytable3<- table(card2$Fraud)
 prop.table(mytable3)
 
-PrBA2<- c(0.0002,.9998)
+PrBA3<- c(0.0002,.9998)
 
-
-data3<- BayesTheorem(PrA3,PrBA2)
-
+data3<- BayesTheorem(PrA3,PrBA3)
 str(data3)
-
 data3
 
 ```

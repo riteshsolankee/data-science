@@ -75,7 +75,8 @@ modi.df <- serchHashtagTwitter('narendramodi')
 ```
 ## Updating into mongoDB
 ```{r}
-
+## split(x, f, drop = FALSE, ...)
+## split divides the data in the vector x into the groups defined by f.
 tweets.list <- lapply(split(modi.df, rownames(modi.df)), as.list)
 names(tweets.list) <- NULL
 

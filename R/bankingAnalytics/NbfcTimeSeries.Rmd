@@ -12,7 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-#tsDataNBFC
+
+## Problem Statemen:
+### A NBFC has some investor who creats FDs with remittance is in australian Dollars. It wants to look at the trends of the ratio of the conversion of Rupeess to Australian Dollar and predict what should be hte mulitiplier for the next few months.  
 
 ## Deleting all variables
 ```{r clear workspace}
@@ -48,8 +50,7 @@ range(tsRate$Date)
 
 train <- filter(tsRate, Date <= "2015-12-01")
 
-View(train)
-
+# View(train)
 ## Convert to ts data
 trainTS <- ts(train[,2], start = c(2005,1), end = c(2014, 12), frequency = 12)
 plot(trainTS)
@@ -73,13 +74,23 @@ accuracy(ets.yhar, testTS)
 
 accuracy(ets.yhar, testTS)[2, "RMSE"]
 ```
-## ARIMA modeling
+## Auto - arima modeling
 ```{r}
 a.fit <- auto.arima(trainTS)
 
 a.fit
 tsdisplay(residuals(a.fit))
-
+a.fit.yhar <- forecast(a.fit, h = 3)
+accuracy(a.fit.yhar, testTS)[2, "RMSE"]
 plot(forecast(a.fit), ylab="Rates", xlab="Year")
+```
+
+## Arima modeling 
+```{r}
+a.fit2 <- Arima(trainTS, order = c(0,0,3))
+a.fit2.yhat <- forecast(a.fit2, h = 3)
+
+accuracy(a.fit2.yhat, test = testTS)[1,"RMSE"]
+
 ```
 

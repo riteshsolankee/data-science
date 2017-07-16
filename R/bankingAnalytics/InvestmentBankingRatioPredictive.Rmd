@@ -13,6 +13,10 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
+## Problem Statement
+### The file list out average PE, Price to book, Price to Sales and Enterprise Value multiplies by countries. It also includes summary statistics on return on equity and capital and margins (net and operating)
+### An investment bank runs a model to understand if the market capital driven by any of the other variables. It intends to use this analysis to advise its clients on investment oppertunities (do not use countries inthe model) 
+
 ## Deleting all variables
 ```{r clear workspace}
 rm(list=ls())
