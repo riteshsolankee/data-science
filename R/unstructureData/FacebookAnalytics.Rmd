@@ -23,8 +23,8 @@ library(Rfacebook)
 ## Get Auth Token
 ```{r}
 
-  app.id <- "162216887655197"
-  app.secret <- "7b4d13b992a7718658595a62306e8f3e"
+  app.id <- "XXXXXX"
+  app.secret <- "XXXXXXXX"
   fb_Oauth <- fbOAuth(app_id = app.id, app_secret = app.secret, extended_permissions = T)
   
 
